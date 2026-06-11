@@ -1,5 +1,3 @@
-# PLAN.md
-
 # AI Engineering Operating Plan
 
 ## Project Vision
@@ -12,29 +10,19 @@ This document is jointly maintained by the Product Owner and the Staff Engineer 
 
 ---
 
-# Current Objective
+## Current Objective
 
 Establish the minimum viable version of the engineering operating system.
 
-Success is defined by successfully completing one end-to-end development cycle using the prescribed workflow:
-
-Goal
-→ Planning
-→ Issue
-→ Feature Branch
-→ Implementation
-→ Pull Request
-→ Staff Engineer Review
-→ Revision
-→ Merge
+Success is defined by successfully completing one end-to-end development cycle using the workflow defined in CLAUDE.md.
 
 The objective is to validate the process before adding automation or complexity.
 
 ---
 
-# Active Milestone
+## Active Milestone
 
-## Milestone 1: Foundation
+### Milestone 1: Foundation
 
 Deliverables:
 
@@ -56,9 +44,9 @@ Completion criteria:
 
 ---
 
-# Staff Engineer Recommendations
+## Staff Engineer Recommendations
 
-## Current Recommendation
+### Current Recommendation
 
 Prioritize proving the engineering workflow over building tooling.
 
@@ -72,7 +60,7 @@ Do not build:
 
 until the manual process has been validated through repeated successful use.
 
-## Reasoning
+### Reasoning
 
 The operating model should emerge from experience rather than speculation.
 
@@ -80,7 +68,7 @@ Premature infrastructure increases maintenance burden without validating that it
 
 ---
 
-# Open Decisions
+## Open Decisions
 
 Items requiring future discussion:
 
@@ -94,9 +82,9 @@ These should remain deferred until supported by practical experience.
 
 ---
 
-# Risks
+## Risks
 
-## Over-engineering
+### Over-engineering
 
 The largest risk is building infrastructure before validating process.
 
@@ -104,7 +92,7 @@ Mitigation:
 
 Continuously prefer simpler solutions and revisit assumptions only after repeated pain points emerge.
 
-## Documentation Sprawl
+### Documentation Sprawl
 
 Excess markdown files create maintenance overhead and competing sources of truth.
 
@@ -112,7 +100,7 @@ Mitigation:
 
 Prefer updating existing artifacts and using GitHub Issues and Pull Requests for transient information.
 
-## Vendor Lock-in
+### Vendor Lock-in
 
 Avoid coupling organizational concepts to specific AI providers.
 
@@ -122,7 +110,7 @@ Describe responsibilities in terms of roles (e.g., Staff Engineer, Software Engi
 
 ---
 
-# Next Recommended Actions
+## Next Recommended Actions
 
 1. Finalize CLAUDE.md.
 2. Create the repository foundation.
@@ -132,7 +120,7 @@ Describe responsibilities in terms of roles (e.g., Staff Engineer, Software Engi
 
 ---
 
-# Planning Rules
+## Planning Rules
 
 This document should remain concise and actionable.
 

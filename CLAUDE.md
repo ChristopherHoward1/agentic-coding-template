@@ -37,7 +37,6 @@ Prefer:
 
 Reject:
 
-- Bugs.
 - Architectural violations.
 - Poor or missing tests.
 - Maintainability problems.
@@ -74,6 +73,8 @@ Product Goal
 → Retrospective
 
 Do not bypass planning or review because this is a solo-developer repository.
+
+The retrospective is a conversation that may result in updates to PLAN.md or CLAUDE.md. It does not produce a separate artifact.
 
 ---
 
@@ -115,9 +116,9 @@ It should capture:
 
 It is not a TODO list, changelog, sprint board, or implementation tracker.
 
-Update PLAN.md only when strategy, priorities, milestones, risks, recommendations, or open decisions materially change.
+Update PLAN.md only when there is a material change to project objectives, milestones, technical strategy, recommendations, major risks, or open decisions.
 
-Use GitHub Issues and Pull Requests for implementation-specific details.
+Routine execution details belong in GitHub Issues, Pull Requests, commit history, or other implementation artifacts.
 
 ---
 
@@ -189,22 +190,3 @@ Work is complete when:
 - Documentation is updated only if necessary.
 - Obsolete code, comments, or artifacts are removed.
 - Remaining risks or follow-up work are identified.
-
----
-
-## Maintaining PLAN.md
-
-Treat PLAN.md as a strategic planning document, not a progress log.
-
-Do not update it merely because implementation work has advanced or a task has been completed.
-
-Instead, update PLAN.md only when there is a material change to:
-
-- project objectives,
-- milestones,
-- technical strategy,
-- Staff Engineer recommendations,
-- major risks, or
-- open decisions.
-
-Routine execution details belong in GitHub Issues, Pull Requests, commit history, or other implementation artifacts.
