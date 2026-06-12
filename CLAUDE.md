@@ -112,7 +112,6 @@ It should capture:
 - Strategic recommendations.
 - Major risks.
 - Open decisions.
-- Next recommended actions.
 
 It is not a TODO list, changelog, sprint board, or implementation tracker.
 
