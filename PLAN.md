@@ -110,16 +110,6 @@ Describe responsibilities in terms of roles (e.g., Staff Engineer, Software Engi
 
 ---
 
-## Next Recommended Actions
-
-1. Finalize CLAUDE.md.
-2. Create the repository foundation.
-3. Execute a small planning exercise using the documented workflow.
-4. Complete one feature through branch → PR → review → merge.
-5. Conduct a retrospective and update this document with lessons learned.
-
----
-
 ## Planning Rules
 
 This document should remain concise and actionable.
