@@ -29,6 +29,8 @@ Work follows a deliberate lifecycle: goal → planning → issue → feature bra
 |------|---------|
 | `CLAUDE.md` | Operating instructions for the AI agent — role definition, workflow, principles, and standards. |
 | `PLAN.md` | Shared planning artifact — current objectives, risks, recommendations, and open decisions. |
+| `scripts/new-issue.sh` | Interactive CLI to scaffold a new implementation issue from the standard template. |
+| `.github/ISSUE_TEMPLATE/implementation.md` | Issue template defining the standard structure for scoped implementation work. |
 
 ## Philosophy
 
