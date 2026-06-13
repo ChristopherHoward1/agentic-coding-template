@@ -27,7 +27,8 @@ Work follows a deliberate lifecycle: goal → planning → issue → feature bra
 
 | File | Purpose |
 |------|---------|
-| `CLAUDE.md` | Operating instructions for the AI agent — role definition, workflow, principles, and standards. |
+| `CLAUDE.md` | Operating instructions for the Staff Engineer agent — role definition, workflow, principles, and standards. |
+| `AGENTS.md` | Operating instructions for the Software Engineer agent — scope discipline, verification, and handoff format. |
 | `PLAN.md` | Shared planning artifact — current objectives, risks, recommendations, and open decisions. |
 
 ## Philosophy
