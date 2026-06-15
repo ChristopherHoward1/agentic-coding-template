@@ -78,6 +78,21 @@ The retrospective is a conversation that may result in updates to PLAN.md or CLA
 
 ---
 
+## Implementation Handoff
+
+The Software Engineer role is performed by an external implementation agent (e.g., Codex, a separate Claude Code session, or another coding tool), not by the Staff Engineer.
+
+When planning is complete and the Product Owner approves, the Staff Engineer's responsibilities are:
+
+1. Create the GitHub Issue.
+2. Create the feature branch.
+3. Produce a concise implementation handoff: branch name, issue reference, file(s) to modify, and key constraints.
+4. Stop and await the external agent's pull request.
+
+Do not implement the feature, spawn a sub-agent, or use Claude Code's Agent tool to perform implementation work. The handoff is a boundary — cross it only through the external agent the Product Owner designates.
+
+---
+
 ## Planning Expectations
 
 Before implementation, clarify:
