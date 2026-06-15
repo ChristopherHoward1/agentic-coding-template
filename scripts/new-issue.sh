@@ -2,6 +2,11 @@
 # Usage: bash scripts/new-issue.sh (run from repository root)
 set -euo pipefail
 
+if ! command -v gh &>/dev/null; then
+  echo "Error: gh CLI is not installed. Install it from https://cli.github.com and authenticate with 'gh auth login'." >&2
+  exit 1
+fi
+
 TEMPLATE=".github/ISSUE_TEMPLATE/implementation.md"
 
 if [[ ! -f "$TEMPLATE" ]]; then
@@ -46,65 +51,52 @@ while true; do
 done
 [[ ${#AC[@]} -eq 0 ]] && { echo "Error: at least one acceptance criterion is required." >&2; exit 1; }
 
-SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' | tr -cs '[:alnum:]' '-' | sed 's/^-//;s/-$//')
-OUTFILE="${SLUG}.md"
+BODY=""
+BODY+="## Goal"$'\n'
+BODY+=$'\n'
+BODY+="$GOAL"$'\n'
+BODY+=$'\n'
 
-if [[ -f "$OUTFILE" ]]; then
-  echo "Error: $OUTFILE already exists. Remove it or choose a different title." >&2
-  exit 1
+if [[ -n "$BACKGROUND" ]]; then
+  BODY+="## Background"$'\n'
+  BODY+=$'\n'
+  BODY+="$BACKGROUND"$'\n'
+  BODY+=$'\n'
 fi
 
-{
-  echo "## Goal"
-  echo
-  echo "$GOAL"
-  echo
+BODY+="## Scope"$'\n'
+BODY+=$'\n'
+BODY+="**In scope:**"$'\n'
+BODY+=$'\n'
+for item in "${IN_SCOPE[@]}"; do
+  BODY+="- $item"$'\n'
+done
+BODY+=$'\n'
+BODY+="**Out of scope:**"$'\n'
+BODY+=$'\n'
+for item in "${OUT_SCOPE[@]}"; do
+  BODY+="- $item"$'\n'
+done
+BODY+=$'\n'
 
-  if [[ -n "$BACKGROUND" ]]; then
-    echo "## Background"
-    echo
-    echo "$BACKGROUND"
-    echo
-  fi
+BODY+="## Acceptance Criteria"$'\n'
+BODY+=$'\n'
+for item in "${AC[@]}"; do
+  BODY+="- [ ] $item"$'\n'
+done
+BODY+=$'\n'
 
-  echo "## Scope"
-  echo
-  echo "**In scope:**"
-  echo
-  for item in "${IN_SCOPE[@]}"; do
-    echo "- $item"
-  done
-  echo
-  echo "**Out of scope:**"
-  echo
-  for item in "${OUT_SCOPE[@]}"; do
-    echo "- $item"
-  done
-  echo
+BODY+="## Decomposition"$'\n'
+BODY+=$'\n'
+BODY+="_Add sub-tasks or recommended sequencing, if non-trivial. Remove this section if straightforward._"$'\n'
+BODY+=$'\n'
 
-  echo "## Acceptance Criteria"
-  echo
-  for item in "${AC[@]}"; do
-    echo "- [ ] $item"
-  done
-  echo
-
-  echo "## Decomposition"
-  echo
-  echo "_Add sub-tasks or recommended sequencing, if non-trivial. Remove this section if straightforward._"
-  echo
-
-  echo "## Risks"
-  echo
-  echo "_Known risks or dependencies worth flagging before implementation. Remove this section if none._"
-} > "$OUTFILE"
+BODY+="## Risks"$'\n'
+BODY+=$'\n'
+BODY+="_Known risks or dependencies worth flagging before implementation. Remove this section if none._"$'\n'
 
 echo
-echo "Written: $OUTFILE"
+echo "Creating GitHub Issue..."
+ISSUE_URL=$(gh issue create --title "$TITLE" --body "$BODY")
 echo
-echo "Next steps:"
-echo "  1. Edit $OUTFILE to add decomposition, risks, or any other details."
-echo "  2. Open your GitHub repository's Issues tab and create a new issue."
-echo "  3. Set the title to: $TITLE"
-echo "  4. Paste the contents of $OUTFILE as the issue body."
-echo "  5. Delete $OUTFILE once the issue is created."
+echo "Issue created: $ISSUE_URL"
