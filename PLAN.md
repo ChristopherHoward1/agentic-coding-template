@@ -12,9 +12,9 @@ This document is jointly maintained by the Product Owner and the Staff Engineer 
 
 ## Current Objective
 
-Complete one end-to-end development cycle with an external implementation agent performing the Software Engineer role.
+Confirm the external-agent handoff process holds across a second cycle, then begin targeted automation of the one step already proven repetitive: issue, branch, and handoff creation.
 
-Success is defined by an external agent (e.g., Codex) receiving a handoff, implementing a scoped issue on a feature branch, opening a pull request, and having that PR reviewed and merged through the standard workflow — with the Staff Engineer not performing any implementation work.
+The Product Owner has decided to accelerate toward automation and eventual productization of this framework, but each step must still be justified by a pattern demonstrated through repeated manual use — see Staff Engineer Recommendations below.
 
 ---
 
@@ -40,17 +40,36 @@ The Staff Engineer / Product Owner collaboration model is established and the pl
 
 ### Milestone 2: External Agent Validation
 
-Near-term goals:
+Goal: validate that the manual handoff process is sufficient for an external agent to implement scoped work without Staff Engineer clarification.
 
-- Complete one full cycle where implementation is performed by an external agent.
-- Validate that AGENTS.md provides sufficient onboarding for an external agent to operate correctly without additional instruction.
-- Identify any handoff artifacts or workflow steps that need refinement based on real external-agent behavior.
+Progress:
 
-Completion criteria:
+- Cycle 1 complete: issue #14 implemented by an external agent, opened as PR #15, reviewed, and merged without scope or acceptance-criteria issues.
+- One handoff-quality gap was found (Staff Engineer left the working tree on `main` after branch creation) and resolved via PR #16, which added explicit branch-handoff and git-ownership rules to CLAUDE.md and AGENTS.md.
 
-- An external implementation agent receives a handoff, implements a scoped issue, and opens a PR without requiring clarification from the Staff Engineer.
-- The PR satisfies all acceptance criteria and passes review without revision requests related to scope discipline or handoff quality.
-- Any gaps discovered are captured in updated documentation.
+Closing criterion:
+
+- A second cycle, run after the PR #16 fix, completes cleanly — no clarification requests, no revision requests related to scope discipline or handoff quality. This confirms the fix held on an independently chosen issue.
+
+Once met, Milestone 2 is complete and Milestone 3 (below) becomes active.
+
+---
+
+## Upcoming Milestone
+
+### Milestone 3: Targeted Automation of Issue/Branch/Handoff Creation
+
+Scope: automate the one step that has already been repeated identically, by hand, across both cycles so far — creating the GitHub Issue, creating and pushing the feature branch, and assembling the handoff message.
+
+Explicitly out of scope for this milestone:
+
+- Triggering the external agent automatically (e.g., via GitHub Actions or webhooks).
+- Any multi-agent orchestration.
+- Automating review, verification, or merge decisions.
+
+Rationale: this is the first automation candidate that meets the project's own bar — a pattern demonstrated through repeated manual use, not a speculative convenience. Automating review or triggering would remove human judgment from exactly the parts of the workflow this project exists to protect.
+
+This milestone activates only after Milestone 2 closes.
 
 ---
 
@@ -58,21 +77,18 @@ Completion criteria:
 
 ### Current Recommendation
 
-Prioritize proving the engineering workflow over building tooling.
+The Product Owner has decided to accelerate toward automation and, eventually, productizing this framework for other projects. This replaces the prior blanket "no automation" stance — but the gating logic stays: automate only what has been demonstrated through repeated manual use, starting with the narrowest, most mechanical step first.
 
-Do not build:
+Do not build, until each is separately justified by its own repeated manual pattern:
 
-- Automation
-- GitHub integrations
-- Skills
 - Agent orchestration
 - Multi-agent communication infrastructure
-
-until the manual process has been validated through repeated successful use.
+- Automatic triggering of the external agent
+- Skills or GitHub integrations beyond the Milestone 3 target
 
 ### Reasoning
 
-The operating model should emerge from experience rather than speculation.
+The operating model should emerge from experience rather than speculation, even on an accelerated timeline. Compressing the validation phase is acceptable; skipping it is not — automation targets must still be chosen from patterns that have actually repeated, not from what seems generically useful.
 
 Premature infrastructure increases maintenance burden without validating that it solves a real problem.
 
@@ -82,9 +98,10 @@ Premature infrastructure increases maintenance burden without validating that it
 
 Items requiring future discussion:
 
+- When to automate triggering the external agent (e.g., GitHub Actions firing on issue creation) — deferred until Milestone 3's automation is itself validated through repeated use.
+- What productization requires structurally (e.g., parameterizing CLAUDE.md/AGENTS.md, removing solo-builder-specific framing) — deferred until Milestone 3 closes.
 - Repository template structure beyond MVP.
 - Introduction of reusable skills.
-- GitHub automation and Apps.
 - Additional persistent documentation.
 - Cross-agent orchestration.
 
@@ -96,11 +113,11 @@ These should remain deferred until supported by practical experience.
 
 ### Over-engineering
 
-The largest risk is building infrastructure before validating process.
+The largest risk is building infrastructure before validating process. This risk increases under the Product Owner's decision to accelerate toward automation and productization.
 
 Mitigation:
 
-Continuously prefer simpler solutions and revisit assumptions only after repeated pain points emerge.
+Gate every automation step on a pattern that has actually repeated in manual use — not on convenience or speculation. Revisit this gate explicitly at the start of each new milestone.
 
 ### Documentation Sprawl
 
