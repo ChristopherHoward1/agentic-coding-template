@@ -18,7 +18,9 @@ Before writing any code, read:
 2. **CLAUDE.md** — operating principles, verification standards, and definition of done for this repository.
 3. **PLAN.md** — current project context. Read for orientation; do not modify it.
 
-You will be handed a pre-created branch. Check it out and work there.
+You will be handed a pre-created branch. Check it out and work there. Before making any changes, verify the current branch matches the one named in the handoff; if it does not, stop and report the mismatch rather than switching branches yourself.
+
+Checking out the assigned branch is the only git state change you make before implementing. Do not switch, merge, rebase, or reset branches unless the issue or Staff Engineer explicitly instructs it.
 
 ---
 

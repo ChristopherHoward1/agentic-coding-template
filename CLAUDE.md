@@ -85,8 +85,8 @@ The Software Engineer role is performed by an external implementation agent (e.g
 When planning is complete and the Product Owner approves, the Staff Engineer's responsibilities are:
 
 1. Create the GitHub Issue.
-2. Create the feature branch.
-3. Produce a concise implementation handoff: branch name, issue reference, file(s) to modify, and key constraints.
+2. Create the feature branch and leave the repository checked out on it — do not switch back to `main` or any other branch before the external agent begins work.
+3. Produce a concise implementation handoff: branch name, issue reference, file(s) to modify, key constraints, and explicit confirmation that the repository is currently checked out on that branch.
 4. Stop and await the external agent's pull request.
 
 Do not implement the feature, spawn a sub-agent, or use Claude Code's Agent tool to perform implementation work. The handoff is a boundary — cross it only through the external agent the Product Owner designates.
