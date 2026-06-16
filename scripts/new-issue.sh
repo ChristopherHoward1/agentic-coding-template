@@ -1,8 +1,27 @@
 #!/usr/bin/env bash
-# Usage: bash scripts/new-issue.sh (run from repository root)
+# Usage: bash scripts/new-issue.sh [--dry-run] (run from repository root)
 set -euo pipefail
 
-if ! command -v gh &>/dev/null; then
+DRY_RUN=false
+
+if [[ $# -gt 1 ]]; then
+  echo "Error: unrecognized arguments: $*" >&2
+  exit 1
+fi
+
+if [[ $# -eq 1 ]]; then
+  case "$1" in
+    --dry-run)
+      DRY_RUN=true
+      ;;
+    *)
+      echo "Error: unrecognized argument: $1" >&2
+      exit 1
+      ;;
+  esac
+fi
+
+if [[ "$DRY_RUN" == false ]] && ! command -v gh &>/dev/null; then
   echo "Error: gh CLI is not installed. Install it from https://cli.github.com and authenticate with 'gh auth login'." >&2
   exit 1
 fi
@@ -94,6 +113,16 @@ BODY+=$'\n'
 BODY+="## Risks"$'\n'
 BODY+=$'\n'
 BODY+="_Known risks or dependencies worth flagging before implementation. Remove this section if none._"$'\n'
+
+if [[ "$DRY_RUN" == true ]]; then
+  echo
+  echo "Dry run: GitHub Issue was not created."
+  echo
+  echo "Title: $TITLE"
+  echo
+  echo "$BODY"
+  exit 0
+fi
 
 echo
 echo "Creating GitHub Issue..."
