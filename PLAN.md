@@ -12,7 +12,7 @@ This document is jointly maintained by the Product Owner and the Staff Engineer 
 
 ## Current Objective
 
-Confirm the external-agent handoff process holds across a second cycle, then begin targeted automation of the one step already proven repetitive: issue, branch, and handoff creation.
+Begin targeted automation of issue, branch, and handoff creation — the one step demonstrated as repetitive across two validated external-agent cycles.
 
 The Product Owner has decided to accelerate toward automation and eventual productization of this framework, but each step must still be justified by a pattern demonstrated through repeated manual use — see Staff Engineer Recommendations below.
 
@@ -22,54 +22,29 @@ The Product Owner has decided to accelerate toward automation and eventual produ
 
 ### Milestone 1: Foundation — Complete
 
-Deliverables shipped:
+Core repository artifacts shipped: CLAUDE.md, PLAN.md, AGENTS.md, README.md, issue and PR templates, `scripts/new-issue.sh`. The Staff Engineer / Product Owner collaboration model is established and the planning process is repeatable across sessions.
 
-- CLAUDE.md
-- PLAN.md
-- AGENTS.md
-- README.md
-- `.github/ISSUE_TEMPLATE/implementation.md`
-- `.github/PULL_REQUEST_TEMPLATE.md`
-- `scripts/new-issue.sh` (with `gh issue create` integration)
+### Milestone 2: External Agent Validation — Complete
 
-The Staff Engineer / Product Owner collaboration model is established and the planning process is repeatable across sessions. Role boundaries have been clarified through retrospective: implementation belongs to an external agent, not a Claude sub-agent.
+The manual handoff process was validated across two implementation cycles. External agents completed scoped issues without clarification requests. Git ownership boundaries, scope discipline, and handoff quality all held. The implementation handoff has emerged as a first-class workflow artifact.
 
 ---
 
 ## Active Milestone
 
-### Milestone 2: External Agent Validation
-
-Goal: validate that the manual handoff process is sufficient for an external agent to implement scoped work without Staff Engineer clarification.
-
-Progress:
-
-- Cycle 1 complete: issue #14 implemented by an external agent, opened as PR #15, reviewed, and merged without scope or acceptance-criteria issues.
-- One handoff-quality gap was found (Staff Engineer left the working tree on `main` after branch creation) and resolved via PR #16, which added explicit branch-handoff and git-ownership rules to CLAUDE.md and AGENTS.md.
-
-Closing criterion:
-
-- A second cycle, run after the PR #16 fix, completes cleanly — no clarification requests, no revision requests related to scope discipline or handoff quality. This confirms the fix held on an independently chosen issue.
-
-Once met, Milestone 2 is complete and Milestone 3 (below) becomes active.
-
----
-
-## Upcoming Milestone
-
 ### Milestone 3: Targeted Automation of Issue/Branch/Handoff Creation
 
-Scope: automate the one step that has already been repeated identically, by hand, across both cycles so far — creating the GitHub Issue, creating and pushing the feature branch, and assembling the handoff message.
+Scope: automate the one step demonstrated as repetitive across both validation cycles — creating the GitHub Issue, creating and pushing the feature branch, and assembling the handoff message.
 
-Explicitly out of scope for this milestone:
+Before automation begins, the handoff format should be formalized in CLAUDE.md. A loosely described format cannot be reliably automated. This is a prerequisite, not a parallel track.
+
+Explicitly out of scope:
 
 - Triggering the external agent automatically (e.g., via GitHub Actions or webhooks).
 - Any multi-agent orchestration.
 - Automating review, verification, or merge decisions.
 
 Rationale: this is the first automation candidate that meets the project's own bar — a pattern demonstrated through repeated manual use, not a speculative convenience. Automating review or triggering would remove human judgment from exactly the parts of the workflow this project exists to protect.
-
-This milestone activates only after Milestone 2 closes.
 
 ---
 
