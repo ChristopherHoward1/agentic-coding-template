@@ -23,6 +23,14 @@ Work follows a deliberate lifecycle: goal → planning → issue → feature bra
 3. Start a conversation — Claude reads `CLAUDE.md` on startup and operates as the Staff Engineer.
 4. To assign implementation work, use your preferred AI coding agent scoped to a specific issue.
 
+## Tests
+
+Run the bash test script from the repository root:
+
+```bash
+bash tests/test-new-issue.sh
+```
+
 ## Repository Structure
 
 | File | Purpose |
