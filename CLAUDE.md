@@ -89,6 +89,27 @@ When planning is complete and the Product Owner approves, the Staff Engineer's r
 3. Produce a concise implementation handoff: branch name, issue reference, file(s) to modify, key constraints, and explicit confirmation that the repository is currently checked out on that branch.
 4. Stop and await the external agent's pull request.
 
+Use this exact template for implementation handoffs:
+
+```markdown
+Issue: #<issue_number> - <issue_title>
+Issue URL: <issue_url>
+Branch: <branch_name>
+Checkout confirmation: The repository is currently checked out on `<branch_name>`.
+Files to Modify:
+- <path_to_modify>
+Files Not to Modify:
+- <path_not_to_modify>
+Key Constraints:
+- <constraint>
+Acceptance Criteria:
+- <acceptance_criterion>
+Verification:
+- <verification_command>
+PR Expectations:
+- <pull_request_expectation>
+```
+
 Do not implement the feature, spawn a sub-agent, or use Claude Code's Agent tool to perform implementation work. The handoff is a boundary — cross it only through the external agent the Product Owner designates.
 
 ---
