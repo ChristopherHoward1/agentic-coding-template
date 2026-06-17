@@ -54,6 +54,8 @@ Your pull request description should include:
 - Any acceptance criteria that are only partially satisfied, and why.
 - Any risks, edge cases, or follow-up work worth flagging for the reviewer.
 
+Open the pull request as ready for review, not as a draft. Draft status signals incomplete work; if all acceptance criteria are satisfied, the PR is ready.
+
 Keep it honest and brief. The Staff Engineer will review against the issue; do not restate the acceptance criteria.
 
 ---
