@@ -36,7 +36,7 @@ The manual handoff process was validated across two implementation cycles. Exter
 
 Scope: automate the one step demonstrated as repetitive across both validation cycles — creating the GitHub Issue, creating and pushing the feature branch, and assembling the handoff message.
 
-Before automation begins, the handoff format should be formalized in CLAUDE.md. A loosely described format cannot be reliably automated. This is a prerequisite, not a parallel track.
+The handoff format has been formalized in CLAUDE.md (Issue #21, PR #22). The automation script is the active next step.
 
 Explicitly out of scope:
 
