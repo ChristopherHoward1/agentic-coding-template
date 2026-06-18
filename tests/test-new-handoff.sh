@@ -202,8 +202,31 @@ test_non_root_directory() {
 
 test_dirty_working_tree() {
   local name="dirty working tree exits non-zero"
+  local temp_repo
+  local script_path
+  local stub_dir
 
-  run_script "" 
+  temp_repo=$(mktemp -d)
+  script_path="$(pwd)/scripts/new-handoff.sh"
+  stub_dir=$(mktemp -d)
+  make_gh_stub "$stub_dir"
+
+  (
+    cd "$temp_repo" || exit 1
+    git init -q
+    git config user.email "test@example.com"
+    git config user.name "Test User"
+    printf "" > CLAUDE.md
+    printf "" > AGENTS.md
+    git add CLAUDE.md AGENTS.md
+    git commit -q -m "Initial commit"
+    printf "dirty\n" > dirty-file.txt
+  )
+
+  LAST_OUTPUT=$(cd "$temp_repo" && PATH="$stub_dir:$PATH" bash "$script_path" 2>&1)
+  LAST_STATUS=$?
+
+  rm -rf "$temp_repo" "$stub_dir"
 
   assert_nonzero_status "$name" || return
   assert_output_contains "$name" "Error: working tree is dirty." || return
