@@ -12,9 +12,9 @@ This document is jointly maintained by the Product Owner and the Staff Engineer 
 
 ## Current Objective
 
-Begin targeted automation of issue, branch, and handoff creation — the one step demonstrated as repetitive across two validated external-agent cycles.
+Validate the issue/branch/handoff automation through repeated real use before building any further automation.
 
-The Product Owner has decided to accelerate toward automation and eventual productization of this framework, but each step must still be justified by a pattern demonstrated through repeated manual use — see Staff Engineer Recommendations below.
+The Product Owner has decided to accelerate toward automation and eventual productization of this framework, but each step must still be justified by a pattern demonstrated through repeated use — and that bar now applies to the automation itself. Triggering and productization remain deferred until the existing scripts prove themselves in practice. See Staff Engineer Recommendations below.
 
 ---
 
@@ -28,23 +28,25 @@ Core repository artifacts shipped: CLAUDE.md, PLAN.md, AGENTS.md, README.md, iss
 
 The manual handoff process was validated across two implementation cycles. External agents completed scoped issues without clarification requests. Git ownership boundaries, scope discipline, and handoff quality all held. The implementation handoff has emerged as a first-class workflow artifact.
 
+### Milestone 3: Targeted Automation of Issue/Branch/Handoff Creation — Complete
+
+The handoff format was formalized in CLAUDE.md (Issues #21/#25, PRs #22/#24). `scripts/new-handoff.sh` (Issue #25, PR #26) now creates and pushes the feature branch and renders the canonical handoff from issue metadata, composing with the existing `scripts/new-issue.sh`. The review cycle caught and corrected a non-hermetic test before merge.
+
 ---
 
 ## Active Milestone
 
-### Milestone 3: Targeted Automation of Issue/Branch/Handoff Creation
+### Milestone 4: Validate the Automation Through Use
 
-Scope: automate the one step demonstrated as repetitive across both validation cycles — creating the GitHub Issue, creating and pushing the feature branch, and assembling the handoff message.
+Scope: use `scripts/new-issue.sh` and `scripts/new-handoff.sh` for real handoffs and record whether they hold up — friction, gaps, or manual steps that recur.
 
-The handoff format has been formalized in CLAUDE.md (Issue #21, PR #22). The automation script is the active next step.
-
-Explicitly out of scope:
+Explicitly out of scope until this validation produces evidence:
 
 - Triggering the external agent automatically (e.g., via GitHub Actions or webhooks).
-- Any multi-agent orchestration.
-- Automating review, verification, or merge decisions.
+- Productizing the framework (parameterizing CLAUDE.md/AGENTS.md, removing solo-builder framing).
+- Unifying `new-issue.sh` and `new-handoff.sh` into a single flow.
 
-Rationale: this is the first automation candidate that meets the project's own bar — a pattern demonstrated through repeated manual use, not a speculative convenience. Automating review or triggering would remove human judgment from exactly the parts of the workflow this project exists to protect.
+Rationale: the automation was just built and has not yet been exercised on a real handoff — this session's handoff was produced manually because the script did not yet exist. The project's gating bar applies to the automation itself: validate through repeated use before adding the next layer. Candidate improvements (e.g., a CLAUDE.md pointer to the handoff script, unifying the two scripts) should be driven by friction observed in use, not added speculatively.
 
 ---
 
@@ -52,7 +54,7 @@ Rationale: this is the first automation candidate that meets the project's own b
 
 ### Current Recommendation
 
-The Product Owner has decided to accelerate toward automation and, eventually, productizing this framework for other projects. This replaces the prior blanket "no automation" stance — but the gating logic stays: automate only what has been demonstrated through repeated manual use, starting with the narrowest, most mechanical step first.
+The Product Owner has decided to accelerate toward automation and, eventually, productizing this framework for other projects. This replaces the prior blanket "no automation" stance — but the gating logic stays: automate only what has been demonstrated through repeated manual use, starting with the narrowest, most mechanical step first. The gate now also runs forward: shipped automation must demonstrate value in real use before the next layer (triggering, productization) is opened.
 
 Do not build, until each is separately justified by its own repeated manual pattern:
 
@@ -73,8 +75,9 @@ Premature infrastructure increases maintenance burden without validating that it
 
 Items requiring future discussion:
 
-- When to automate triggering the external agent (e.g., GitHub Actions firing on issue creation) — deferred until Milestone 3's automation is itself validated through repeated use.
-- What productization requires structurally (e.g., parameterizing CLAUDE.md/AGENTS.md, removing solo-builder-specific framing) — deferred until Milestone 3 closes.
+- When to automate triggering the external agent (e.g., GitHub Actions firing on issue creation) — deferred until the issue/branch/handoff automation is validated through repeated use (Milestone 4).
+- What productization requires structurally (e.g., parameterizing CLAUDE.md/AGENTS.md, removing solo-builder-specific framing) — deferred until the automation is validated in use (Milestone 4).
+- Whether to unify `new-issue.sh` and `new-handoff.sh` into a single flow — open only if Milestone 4 shows the manual seam between them recurs as friction.
 - Repository template structure beyond MVP.
 - Introduction of reusable skills.
 - Additional persistent documentation.
