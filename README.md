@@ -25,10 +25,11 @@ Work follows a deliberate lifecycle: goal → planning → issue → feature bra
 
 ## Tests
 
-Run the bash test script from the repository root:
+Run the bash test scripts from the repository root:
 
 ```bash
 bash tests/test-new-issue.sh
+bash tests/test-new-handoff.sh
 ```
 
 ## Repository Structure
@@ -39,6 +40,7 @@ bash tests/test-new-issue.sh
 | `AGENTS.md` | Operating instructions for the Software Engineer agent — scope discipline, verification, and handoff format. |
 | `PLAN.md` | Shared planning artifact — current objectives, risks, recommendations, and open decisions. |
 | `scripts/new-issue.sh` | Interactive CLI to scaffold a new implementation issue from the standard template. |
+| `scripts/new-handoff.sh` | Interactive CLI to create a feature branch and generate the standard implementation handoff. |
 | `.github/ISSUE_TEMPLATE/implementation.md` | Issue template defining the standard structure for scoped implementation work. |
 
 ## Philosophy
