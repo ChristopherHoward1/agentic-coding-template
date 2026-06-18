@@ -92,6 +92,8 @@ When planning is complete and the Product Owner approves, the Staff Engineer's r
 Use this exact template for implementation handoffs:
 
 ```markdown
+## Implementation Handoff
+
 Issue: #<issue_number> - <issue_title>
 Issue URL: <issue_url>
 Branch: <branch_name>
