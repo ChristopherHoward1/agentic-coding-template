@@ -25,9 +25,10 @@ Work follows a deliberate lifecycle: goal → planning → issue → feature bra
 
 ## Tests
 
-Run the bash test scripts from the repository root:
+Run the linter and bash test scripts from the repository root:
 
 ```bash
+bash scripts/lint.sh
 bash tests/test-new-issue.sh
 bash tests/test-new-handoff.sh
 ```
