@@ -46,7 +46,9 @@ Explicitly out of scope until this validation produces evidence:
 - Productizing the framework (parameterizing CLAUDE.md/AGENTS.md, removing solo-builder framing).
 - Unifying `new-issue.sh` and `new-handoff.sh` into a single flow.
 
-Rationale: the automation was just built and has not yet been exercised on a real handoff — this session's handoff was produced manually because the script did not yet exist. The project's gating bar applies to the automation itself: validate through repeated use before adding the next layer. Candidate improvements (e.g., a CLAUDE.md pointer to the handoff script, unifying the two scripts) should be driven by friction observed in use, not added speculatively.
+Rationale: the project's gating bar applies to the automation itself: validate through repeated use before adding the next layer. Candidate improvements (e.g., a CLAUDE.md pointer to the handoff script, unifying the two scripts) should be driven by friction observed in use, not added speculatively.
+
+Validation status: the first full real cycle has completed and the loop held — Issue #28 (ShellCheck linting) was scoped with `new-issue.sh`, handed off via `new-handoff.sh`, implemented by the external agent with no clarification requests, reviewed, and merged (PR #29) with all acceptance criteria and verification satisfied. The milestone stays open for at least one more real handoff to test whether the single-observation frictions (interactive scripts being awkward for an agent to drive; metadata/file-list duplication across the two scripts; verification tool prerequisites not flagged in the handoff) recur or remain one-offs.
 
 ---
 
@@ -55,6 +57,8 @@ Rationale: the automation was just built and has not yet been exercised on a rea
 ### Current Recommendation
 
 The Product Owner has decided to accelerate toward automation and, eventually, productizing this framework for other projects. This replaces the prior blanket "no automation" stance — but the gating logic stays: automate only what has been demonstrated through repeated manual use, starting with the narrowest, most mechanical step first. The gate now also runs forward: shipped automation must demonstrate value in real use before the next layer (triggering, productization) is opened.
+
+Recommended next increment: fix the dirty-tree friction in the handoff flow. `scripts/new-handoff.sh` aborts on a dirty working tree, but `.claude/settings.local.json` is git-tracked and is rewritten by the agent harness whenever a permission is granted — so routine operation dirties the tree and blocks the script. This was observed repeatedly across the Milestone 4 cycle (it blocked and was reverted multiple times), so it clears the gating bar as the next-narrowest mechanical step. Likely fix: untrack/gitignore `.claude/settings.local.json`, or have the scripts ignore that path. Queued for a future cycle; not yet implemented.
 
 Do not build, until each is separately justified by its own repeated manual pattern:
 
