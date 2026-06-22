@@ -100,6 +100,18 @@ assert_output_contains() {
   return 1
 }
 
+assert_output_not_contains() {
+  local name="$1"
+  local unexpected="$2"
+
+  if ! contains "$LAST_OUTPUT" "$unexpected"; then
+    return 0
+  fi
+
+  fail "$name" "expected output not to contain: $unexpected"
+  return 1
+}
+
 assert_equals() {
   local name="$1"
   local actual="$2"
@@ -164,6 +176,101 @@ EOF
     fail "$name" "dry-run created branch $branch"
     return
   fi
+
+  pass "$name"
+}
+
+test_noninteractive_dry_run_output_parity() {
+  local name="non-interactive dry-run output matches interactive output"
+  local branch="feature/test-handoff-parity-$$"
+  local interactive_handoff
+  local noninteractive_handoff
+
+  run_script "25\n$branch\nscripts/new-handoff.sh\ntests/test-new-handoff.sh\n\nscripts/new-issue.sh\nCLAUDE.md\n\nFollow repository conventions.\nPreserve existing behavior.\n\nbash scripts/new-handoff.sh --dry-run\nbash tests/test-new-handoff.sh\n\nOpen as ready for review.\nInclude Closes #25.\n\n" --dry-run
+  assert_status "$name" 0 || return
+  interactive_handoff=$(handoff_output)
+
+  run_script "" \
+    --dry-run \
+    --issue 25 \
+    --branch "$branch" \
+    --file-to-modify "scripts/new-handoff.sh" \
+    --file-to-modify "tests/test-new-handoff.sh" \
+    --file-not-to-modify "scripts/new-issue.sh" \
+    --file-not-to-modify "CLAUDE.md" \
+    --constraint "Follow repository conventions." \
+    --constraint "Preserve existing behavior." \
+    --verify "bash scripts/new-handoff.sh --dry-run" \
+    --verify "bash tests/test-new-handoff.sh" \
+    --pr-expectation "Open as ready for review." \
+    --pr-expectation "Include Closes #25."
+  assert_status "$name" 0 || return
+  assert_output_not_contains "$name" "Issue number:" || return
+  assert_output_not_contains "$name" "Files to modify" || return
+  noninteractive_handoff=$(handoff_output)
+
+  assert_equals "$name" "$noninteractive_handoff" "$interactive_handoff" || return
+
+  if git show-ref --verify --quiet "refs/heads/$branch"; then
+    fail "$name" "dry-run created branch $branch"
+    return
+  fi
+
+  pass "$name"
+}
+
+test_noninteractive_missing_required_field() {
+  local name="non-interactive missing required field exits non-zero"
+
+  LAST_OUTPUT=$("$BASH_BIN" scripts/new-handoff.sh \
+    --dry-run \
+    --issue 25 \
+    --file-to-modify "scripts/new-handoff.sh" \
+    --file-not-to-modify "scripts/new-issue.sh" \
+    --constraint "Follow repository conventions." \
+    --verify "bash tests/test-new-handoff.sh" \
+    --pr-expectation "Open as ready for review." 2>&1)
+  LAST_STATUS=$?
+
+  assert_nonzero_status "$name" || return
+  assert_output_contains "$name" "Error: branch is required." || return
+  assert_output_not_contains "$name" "gh CLI is not installed" || return
+  assert_output_not_contains "$name" "Issue number:" || return
+
+  pass "$name"
+}
+
+test_noninteractive_list_values_preserved() {
+  local name="non-interactive list values preserve spaces and punctuation"
+
+  run_script "" \
+    --dry-run \
+    --issue 25 \
+    --branch "feature/test-handoff-lists-$$" \
+    --file-to-modify "scripts/new-handoff.sh (flag mode)" \
+    --file-not-to-modify "scripts/new-issue.sh: leave untouched" \
+    --constraint "Preserve spaces, commas, semicolons; and punctuation!" \
+    --verify "bash tests/test-new-handoff.sh -- value with spaces" \
+    --pr-expectation "Mention --push / --no-push behavior."
+
+  assert_status "$name" 0 || return
+  assert_output_contains "$name" "- scripts/new-handoff.sh (flag mode)" || return
+  assert_output_contains "$name" "- scripts/new-issue.sh: leave untouched" || return
+  assert_output_contains "$name" "- Preserve spaces, commas, semicolons; and punctuation!" || return
+  assert_output_contains "$name" "- bash tests/test-new-handoff.sh -- value with spaces" || return
+  assert_output_contains "$name" "- Mention --push / --no-push behavior." || return
+
+  pass "$name"
+}
+
+test_push_conflict() {
+  local name="push conflict exits non-zero"
+
+  LAST_OUTPUT=$("$BASH_BIN" scripts/new-handoff.sh --push --no-push 2>&1)
+  LAST_STATUS=$?
+
+  assert_nonzero_status "$name" || return
+  assert_output_contains "$name" "Error: --push and --no-push cannot both be supplied." || return
 
   pass "$name"
 }
@@ -269,6 +376,10 @@ test_pre_existing_branch() {
 }
 
 test_dry_run_output
+test_noninteractive_dry_run_output_parity
+test_noninteractive_missing_required_field
+test_noninteractive_list_values_preserved
+test_push_conflict
 test_missing_gh
 test_non_root_directory
 test_dirty_working_tree
