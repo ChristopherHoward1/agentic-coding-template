@@ -12,9 +12,9 @@ This document is jointly maintained by the Product Owner and the Staff Engineer 
 
 ## Current Objective
 
-Validate the issue/branch/handoff automation through repeated real use before building any further automation.
+Reduce the agent-driving friction in the now-validated issue/branch/handoff automation by adding a non-interactive input mode to the handoff scripts, so an agent can drive them without hand-built piped stdin.
 
-The Product Owner has decided to accelerate toward automation and eventual productization of this framework, but each step must still be justified by a pattern demonstrated through repeated use — and that bar now applies to the automation itself. Triggering and productization remain deferred until the existing scripts prove themselves in practice. See Staff Engineer Recommendations below.
+The issue/branch/handoff automation has been validated across two real cycles (Milestone 4). The Product Owner has decided to accelerate toward automation and eventual productization of this framework, but each step must still be justified by a pattern demonstrated through repeated use. The interactive-script friction has now recurred across cycles, justifying this increment. Triggering and productization remain deferred until the validated automation's known frictions are addressed. See Staff Engineer Recommendations below.
 
 ---
 
@@ -32,23 +32,27 @@ The manual handoff process was validated across two implementation cycles. Exter
 
 The handoff format was formalized in CLAUDE.md (Issues #21/#25, PRs #22/#24). `scripts/new-handoff.sh` (Issue #25, PR #26) now creates and pushes the feature branch and renders the canonical handoff from issue metadata, composing with the existing `scripts/new-issue.sh`. The review cycle caught and corrected a non-hermetic test before merge.
 
+### Milestone 4: Validate the Automation Through Use — Complete
+
+The issue/branch/handoff automation was validated across two real cycles: ShellCheck linting (Issue #28, PR #29) and the dirty-tree fix (Issue #31, PR #32). In both, the external agent implemented the scoped issue with no clarification requests and the resulting PR matched the handoff. The cycle also surfaced and resolved a self-referential friction: `.claude/settings.local.json` was git-tracked and rewritten by the Claude Code harness on every permission grant, dirtying the tree and blocking `new-handoff.sh`; it is now untracked and gitignored (PR #32). The metadata/file-list duplication and verification-prerequisite frictions noted after cycle 1 did not recur. One friction did recur without being resolved — driving the interactive scripts requires hand-built piped stdin — and is carried forward as the next increment.
+
 ---
 
 ## Active Milestone
 
-### Milestone 4: Validate the Automation Through Use
+### Milestone 5: Non-Interactive Input for the Handoff Scripts
 
-Scope: use `scripts/new-issue.sh` and `scripts/new-handoff.sh` for real handoffs and record whether they hold up — friction, gaps, or manual steps that recur.
+Scope: add a non-interactive input mode to `scripts/new-handoff.sh` (and `scripts/new-issue.sh` if the same friction applies) so an agent can supply all fields without driving sequential interactive prompts via hand-built piped stdin.
 
-Explicitly out of scope until this validation produces evidence:
+Justification: the interactive-script friction recurred across both Milestone 4 cycles (cycle 1 with #28, cycle 2 with #31), clearing the project's gating bar — an automation step is opened only by a pattern demonstrated through repeated use.
 
-- Triggering the external agent automatically (e.g., via GitHub Actions or webhooks).
-- Productizing the framework (parameterizing CLAUDE.md/AGENTS.md, removing solo-builder framing).
-- Unifying `new-issue.sh` and `new-handoff.sh` into a single flow.
+Explicitly out of scope until separately justified:
 
-Rationale: the project's gating bar applies to the automation itself: validate through repeated use before adding the next layer. Candidate improvements (e.g., a CLAUDE.md pointer to the handoff script, unifying the two scripts) should be driven by friction observed in use, not added speculatively.
+- Unifying `new-issue.sh` and `new-handoff.sh` into a single flow (the metadata/file-list duplication friction has not yet recurred).
+- Triggering the external agent automatically.
+- Productizing the framework.
 
-Validation status: the first full real cycle has completed and the loop held — Issue #28 (ShellCheck linting) was scoped with `new-issue.sh`, handed off via `new-handoff.sh`, implemented by the external agent with no clarification requests, reviewed, and merged (PR #29) with all acceptance criteria and verification satisfied. The milestone stays open for at least one more real handoff to test whether the single-observation frictions (interactive scripts being awkward for an agent to drive; metadata/file-list duplication across the two scripts; verification tool prerequisites not flagged in the handoff) recur or remain one-offs.
+Design note: prefer the simplest mechanism that removes the friction (e.g., flags or a structured input file) over a redesign of the scripts. Keep the interactive mode working unless evidence shows it is unused.
 
 ---
 
@@ -58,7 +62,9 @@ Validation status: the first full real cycle has completed and the loop held —
 
 The Product Owner has decided to accelerate toward automation and, eventually, productizing this framework for other projects. This replaces the prior blanket "no automation" stance — but the gating logic stays: automate only what has been demonstrated through repeated manual use, starting with the narrowest, most mechanical step first. The gate now also runs forward: shipped automation must demonstrate value in real use before the next layer (triggering, productization) is opened.
 
-Recommended next increment: fix the dirty-tree friction in the handoff flow. `scripts/new-handoff.sh` aborts on a dirty working tree, but `.claude/settings.local.json` is git-tracked and is rewritten by the agent harness whenever a permission is granted — so routine operation dirties the tree and blocks the script. This was observed repeatedly across the Milestone 4 cycle (it blocked and was reverted multiple times), so it clears the gating bar as the next-narrowest mechanical step. Likely fix: untrack/gitignore `.claude/settings.local.json`, or have the scripts ignore that path. Queued for a future cycle; not yet implemented.
+Recommended next increment: add a non-interactive input mode to the handoff scripts (Milestone 5). Driving `new-issue.sh` and `new-handoff.sh` currently requires hand-built piped stdin against sequential interactive prompts; this friction recurred across both Milestone 4 cycles, clearing the gating bar. Prefer the narrowest mechanism (flags or a structured input file) that lets an agent supply all fields at once, without unifying or redesigning the scripts.
+
+The prior dirty-tree friction in the handoff flow has been resolved: `.claude/settings.local.json` is now untracked and gitignored (Issue #31, PR #32), so routine permission grants no longer dirty the tree or block `new-handoff.sh`.
 
 Do not build, until each is separately justified by its own repeated manual pattern:
 
@@ -79,9 +85,9 @@ Premature infrastructure increases maintenance burden without validating that it
 
 Items requiring future discussion:
 
-- When to automate triggering the external agent (e.g., GitHub Actions firing on issue creation) — deferred until the issue/branch/handoff automation is validated through repeated use (Milestone 4).
-- What productization requires structurally (e.g., parameterizing CLAUDE.md/AGENTS.md, removing solo-builder-specific framing) — deferred until the automation is validated in use (Milestone 4).
-- Whether to unify `new-issue.sh` and `new-handoff.sh` into a single flow — open only if Milestone 4 shows the manual seam between them recurs as friction.
+- When to automate triggering the external agent (e.g., GitHub Actions firing on issue creation) — deferred until the validated automation's known frictions are addressed (Milestone 5).
+- What productization requires structurally (e.g., parameterizing CLAUDE.md/AGENTS.md, removing solo-builder-specific framing) — deferred while the validated automation's frictions are addressed (Milestone 5).
+- Whether to unify `new-issue.sh` and `new-handoff.sh` into a single flow — open only if the metadata/file-list seam between them recurs as friction; not yet observed to repeat.
 - Repository template structure beyond MVP.
 - Introduction of reusable skills.
 - Additional persistent documentation.
