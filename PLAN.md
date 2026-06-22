@@ -12,9 +12,9 @@ This document is jointly maintained by the Product Owner and the Staff Engineer 
 
 ## Current Objective
 
-Reduce the agent-driving friction in the now-validated issue/branch/handoff automation by adding a non-interactive input mode to the handoff scripts, so an agent can drive them without hand-built piped stdin.
+Finish reducing the agent-driving friction in the issue/branch/handoff automation. Non-interactive flag mode now ships on both handoff scripts (`new-handoff.sh`, PR #35; `new-issue.sh`, PR #37). The remaining work is to validate `new-issue.sh`'s flag mode in one real cycle and resolve the one robustness bug that real use of the scripts exposed.
 
-The issue/branch/handoff automation has been validated across two real cycles (Milestone 4). The Product Owner has decided to accelerate toward automation and eventual productization of this framework, but each step must still be justified by a pattern demonstrated through repeated use. The interactive-script friction has now recurred across cycles, justifying this increment. Triggering and productization remain deferred until the validated automation's known frictions are addressed. See Staff Engineer Recommendations below.
+The Product Owner has decided to accelerate toward automation and eventual productization of this framework, but each step must still be justified by a pattern demonstrated through repeated use. Triggering and productization remain deferred until the validated automation's known frictions are addressed. See Staff Engineer Recommendations below.
 
 ---
 
@@ -46,6 +46,13 @@ Scope: add a non-interactive input mode to `scripts/new-handoff.sh` (and `script
 
 Justification: the interactive-script friction recurred across both Milestone 4 cycles (cycle 1 with #28, cycle 2 with #31), clearing the project's gating bar — an automation step is opened only by a pattern demonstrated through repeated use.
 
+Status: flag mode is implemented and merged on both scripts — `new-handoff.sh` (Issue #34, PR #35) and `new-issue.sh` (Issue #36, PR #37), the latter mirroring the former's pattern. `new-handoff.sh`'s flag mode has been exercised in a real cycle (it built the #36 handoff); `new-issue.sh`'s has not yet.
+
+Remaining to close (per the forward-running gate — shipped automation must demonstrate value in real use):
+
+1. Validate `new-issue.sh`'s flag mode by creating one real issue through its flags.
+2. Fix the robustness bug real use exposed: rendering an issue/handoff with empty in-scope/out-of-scope lists aborts under `set -u` on bash 3.2 (`IN_SCOPE[@]: unbound variable`), in both interactive and non-interactive modes, in `new-issue.sh` (and the same empty-array pattern should be checked in `new-handoff.sh`). Creating this fix's issue via `new-issue.sh`'s flags satisfies item 1 at the same time.
+
 Explicitly out of scope until separately justified:
 
 - Unifying `new-issue.sh` and `new-handoff.sh` into a single flow (the metadata/file-list duplication friction has not yet recurred).
@@ -62,7 +69,9 @@ Design note: prefer the simplest mechanism that removes the friction (e.g., flag
 
 The Product Owner has decided to accelerate toward automation and, eventually, productizing this framework for other projects. This replaces the prior blanket "no automation" stance — but the gating logic stays: automate only what has been demonstrated through repeated manual use, starting with the narrowest, most mechanical step first. The gate now also runs forward: shipped automation must demonstrate value in real use before the next layer (triggering, productization) is opened.
 
-Recommended next increment: add a non-interactive input mode to the handoff scripts (Milestone 5). Driving `new-issue.sh` and `new-handoff.sh` currently requires hand-built piped stdin against sequential interactive prompts; this friction recurred across both Milestone 4 cycles, clearing the gating bar. Prefer the narrowest mechanism (flags or a structured input file) that lets an agent supply all fields at once, without unifying or redesigning the scripts.
+Recommended next increment: a small robustness fix to harden the scripts against empty in-scope/out-of-scope lists (the `set -u` empty-array crash described under Milestone 5). It is justified as a real, reproduced bug — not speculation — and creating its issue through `new-issue.sh`'s new flag mode doubles as the real-use validation that lets Milestone 5 close. Keep the fix narrow; do not redesign the scripts. Two non-blocking observations from PR #37 may be folded into this increment if convenient: the duplicated inline `gh`-presence check in `new-issue.sh` could become a `require_gh` helper as in `new-handoff.sh`.
+
+The prior non-interactive-input increment is done: flag mode shipped on `new-handoff.sh` (PR #35) and `new-issue.sh` (PR #37), mirroring one pattern across both. Triggering and productization remain gated behind Milestone 5 closing.
 
 The prior dirty-tree friction in the handoff flow has been resolved: `.claude/settings.local.json` is now untracked and gitignored (Issue #31, PR #32), so routine permission grants no longer dirty the tree or block `new-handoff.sh`.
 
