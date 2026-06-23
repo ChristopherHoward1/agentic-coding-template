@@ -116,6 +116,16 @@ Do not implement the feature, spawn a sub-agent, or use Claude Code's Agent tool
 
 ---
 
+## Review
+
+Review every pull request against its issue, not from memory.
+
+Begin each review by running `scripts/review-context.sh <pr-number>` from the repository root. In one read-only pass it gathers the PR metadata, the linked issue and its acceptance criteria, the changed files, the diff (or a stat summary for large diffs), and the repository's lint and test results. It gathers context only — it makes no review decision.
+
+Then apply engineering judgment the helper cannot: confirm scope was respected, evaluate each acceptance criterion individually, and decide to approve or request changes. The helper informs the review; it does not replace it.
+
+---
+
 ## Planning Expectations
 
 Before implementation, clarify:
