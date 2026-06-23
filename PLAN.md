@@ -12,9 +12,9 @@ This document is jointly maintained by the Product Owner and the Staff Engineer 
 
 ## Current Objective
 
-The issue/branch/handoff automation is now feature-complete. Non-interactive flag mode ships on both scripts (`new-handoff.sh`, PR #35; `new-issue.sh`, PR #37), and the one robustness bug real use exposed — the empty-list `set -u` crash — is fixed (PR #40). Both scripts' flag modes have been validated in a real cycle: Issue #39 and its handoff were created through them. Milestone 6 is now selected: a read-only review-preparation helper (Issue #41), chosen on observed workflow evidence — the Staff Engineer reassembles the same review context by hand every cycle — rather than speculative automation.
+The read-only review-preparation helper shipped: `scripts/review-context.sh` (Issue #41, PR #43), reviewed APPROVE with all acceptance criteria met. The project is now in a validation phase — the helper has been built and tested but not yet run against a real review (it could not review its own PR), so under the forward-running gate the next step is to use it in at least one real review cycle and evaluate whether it materially reduces review-preparation effort. No new implementation work is opened until that use surfaces an evidence-backed increment.
 
-The Product Owner has decided to accelerate toward automation and eventual productization of this framework, but each step must still be justified by a pattern demonstrated through repeated use. With the automation loop's known frictions now resolved, the next increment is selected by expected value among evidence-backed candidates; triggering and productization remain gated until their cost is justified. See Staff Engineer Recommendations below.
+The Product Owner has decided to accelerate toward automation and eventual productization of this framework, but each step must still be justified by a pattern demonstrated through repeated use. The gate runs forward as well: shipped automation must demonstrate value in real use before the next layer is opened. Triggering and productization remain gated until their cost is justified. See Staff Engineer Recommendations below.
 
 ---
 
@@ -40,24 +40,28 @@ The issue/branch/handoff automation was validated across two real cycles: ShellC
 
 Non-interactive flag mode shipped on both scripts — `new-handoff.sh` (Issue #34, PR #35) and `new-issue.sh` (Issue #36, PR #37) — removing the hand-built piped-stdin friction that recurred across both Milestone 4 cycles. Real use of the flag mode immediately exposed a latent robustness bug: rendering an issue or handoff with empty in-scope/out-of-scope lists aborted under `set -u` on bash 3.2 (`IN_SCOPE[@]: unbound variable`). It was fixed narrowly by guarding the empty-array render loops (Issue #39, PR #40); `new-handoff.sh` was confirmed already safe because validation requires its lists non-empty before the renderer is reached. Both scripts' flag modes were validated in a real cycle: Issue #39 was created through `new-issue.sh`'s flags and its handoff through `new-handoff.sh`'s flags.
 
+### Milestone 6: Read-Only Review-Preparation Helper — Complete
+
+`scripts/review-context.sh` shipped (Issue #41, PR #43): a read-only helper that assembles PR review context in one command — PR metadata/body, the linked issue and its acceptance criteria (resolved from a Closes/Fixes/Resolves reference), the changed-file list, the diff (or a stat summary above a size threshold), and the results of the repository's lint and test checks — without making or recording any review decision. The read-only boundary is enforced by a test that fails on any write-capable `gh` subcommand. The cycle dogfooded both Milestone 5 scripts (Issue #41 via `new-issue.sh`'s flags, the branch and handoff via `new-handoff.sh`'s flags) with no friction. Review was APPROVE: all acceptance criteria met, all four verification commands green under bash 3.2. Non-blocking observations were carried forward to the validation phase below.
+
 ---
 
 ## Active Milestone
 
-### Milestone 6: Read-Only Review-Preparation Helper
+### Milestone 7: Validate the Review-Preparation Helper Through Use
 
-Scope: add a read-only `scripts/review-context.sh` that assembles the context a Staff Engineer needs to review a pull request — the linked issue, the PR diff and changed-file list, and the repository's lint/test results — without making or recording any review decision (Issue #41).
+Objective: use `scripts/review-context.sh` during at least one real review cycle and evaluate whether it materially reduces review-preparation effort. This is a validation phase, not an implementation milestone — no new implementation issue is opened. It honors the forward-running gate: shipped automation must demonstrate value in real use before the next layer (triggering, productization) is opened. This mirrors Milestone 4, which validated the issue/handoff automation through use before any new construction.
 
-Justification: reassembling review context by hand (reading the issue, fetching the PR and diff, running lint/tests) has repeated identically in every review cycle to date. It is the narrowest, most mechanical remaining step, is read-only, composes with the existing `gh`, lint, and test commands, and carries near-zero infrastructure cost — the best expected value among evidence-backed candidates. This clears the project's gate: automate only a pattern demonstrated through repeated manual use.
+Done looks like: the helper has been run against at least one real PR review, and the next retrospective records whether it meaningfully reduced the manual review-prep sequence and what, if anything, the next evidence-backed increment should be.
 
-Scope boundary: the helper gathers and prints; it must not emit a verdict, post a comment, approve, merge, or otherwise write to GitHub or mutate git state. Keep it read-only and composing; do not let it expand into orchestration.
+Observations carried forward — recorded only; none has yet demonstrated enough friction to justify a cleanup increment:
 
-Candidates considered and deferred:
+- Unused `contains()` helper in `review-context.sh` (dead code).
+- The zero-argument path (resolve the current branch's PR) is implemented but not directly covered by a test.
+- Above-threshold diffs still fetch the full diff before showing `--stat`, and `gh pr diff` runs up to three times per invocation.
+- Write-capable `gh` detection is a denylist; a future write subcommand not enumerated would not be flagged.
 
-- Automatic triggering of the external agent — the largest raw recurring friction, but the highest infrastructure cost; remains gated until its cost is separately justified.
-- Productization of the framework — deferred until a reusability need is demonstrated.
-
-Explicitly out of scope until separately justified: agent orchestration, multi-agent communication infrastructure, and skills or GitHub integrations beyond demonstrated need.
+Deferred until separately justified: automatic triggering of the external agent (highest infrastructure cost), productization, and unifying `new-issue.sh`/`new-handoff.sh`. Explicitly out of scope until justified: agent orchestration, multi-agent communication infrastructure, and skills or GitHub integrations beyond demonstrated need.
 
 ---
 
@@ -67,11 +71,11 @@ Explicitly out of scope until separately justified: agent orchestration, multi-a
 
 The Product Owner has decided to accelerate toward automation and, eventually, productizing this framework for other projects. This replaces the prior blanket "no automation" stance — but the gating logic stays: automate only what has been demonstrated through repeated manual use, starting with the narrowest, most mechanical step first. The gate now also runs forward: shipped automation must demonstrate value in real use before the next layer (triggering, productization) is opened.
 
-Milestone 5 is complete: flag mode shipped on both scripts (PRs #35, #37), the empty-list `set -u` crash is fixed (PR #40), and both flag modes are validated in real use (Issue #39 and its handoff).
+Milestone 6 is complete: the read-only review-preparation helper shipped (Issue #41, PR #43) and was reviewed APPROVE. But it has not yet been run against a real review — it could not review its own PR — so under the forward gate the next step is validation, not new construction.
 
-Recommended next increment: a read-only review-preparation helper. A normal feature cycle's largest remaining recurring human-orchestration steps are (a) carrying the rendered handoff to the external agent and (b) reassembling review context — reading CLAUDE.md/AGENTS.md/PLAN.md, fetching the issue and PR diff, and running lint/tests — by hand at the start of every review. Step (a) is the largest raw friction but the most expensive to automate (it is the triggering/orchestration layer the gate defers). Step (b) has repeated identically in every review to date, is read-only, composes with the existing `gh`, lint, and test commands, and carries near-zero infrastructure cost — the best expected value among evidence-backed candidates. It is the narrowest, most mechanical next step, consistent with the gating rule. Keep it read-only and composing; do not let it expand into orchestration.
+Recommended next step: use `review-context.sh` in the next one or two real review cycles and let that use decide the next increment (Milestone 7). This mirrors Milestone 4's validation phase. Hold the non-blocking observations from PR #43 (dead `contains()` helper, untested zero-arg path, diff double-fetch, denylist detection) as observations only; none has shown enough friction to justify a cleanup increment, and acting on them now would be speculation rather than demonstrated need.
 
-Triggering the external agent and productization remain gated until their cost is separately justified by a demonstrated pattern.
+Triggering the external agent and productization remain gated until their cost is separately justified by a demonstrated pattern — and, per the forward gate, until the shipped review helper has proven its value in real use.
 
 The prior dirty-tree friction in the handoff flow has been resolved: `.claude/settings.local.json` is now untracked and gitignored (Issue #31, PR #32), so routine permission grants no longer dirty the tree or block `new-handoff.sh`.
 
