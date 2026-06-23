@@ -12,9 +12,9 @@ This document is jointly maintained by the Product Owner and the Staff Engineer 
 
 ## Current Objective
 
-The read-only review-preparation helper shipped: `scripts/review-context.sh` (Issue #41, PR #43), reviewed APPROVE with all acceptance criteria met. The project is now in a validation phase — the helper has been built and tested but not yet run against a real review (it could not review its own PR), so under the forward-running gate the next step is to use it in at least one real review cycle and evaluate whether it materially reduces review-preparation effort. No new implementation work is opened until that use surfaces an evidence-backed increment.
+The read-only review-preparation helper shipped (`scripts/review-context.sh`, Issue #41, PR #43, reviewed APPROVE) and Milestone 7 opened to validate it through real use. The Product Owner has now decided to open the agent-triggering milestone (Milestone 8) immediately, deliberately overriding the forward gate that would otherwise require Milestone 7's validation to complete first. The override is bounded and does not skip validation: (a) the triggering slice is scoped to the smallest mechanical step — a single command that starts exactly one external agent run against an existing handoff — so the at-risk investment is small; and (b) Milestone 8 runs through the normal lifecycle, so its PR is reviewed with `scripts/review-context.sh`, producing Milestone 7's real-use validation as a byproduct rather than deferring it.
 
-The Product Owner has decided to accelerate toward automation and eventual productization of this framework, but each step must still be justified by a pattern demonstrated through repeated use. The gate runs forward as well: shipped automation must demonstrate value in real use before the next layer is opened. Triggering and productization remain gated until their cost is justified. See Staff Engineer Recommendations below.
+The Product Owner is accelerating toward automation and eventual productization of this framework. Each step is still justified by a demonstrated pattern and scoped to the narrowest mechanical increment; the forward gate remains the default, and this override is a deliberate, bounded exception — not its removal. See Staff Engineer Recommendations below.
 
 ---
 
@@ -48,20 +48,21 @@ Non-interactive flag mode shipped on both scripts — `new-handoff.sh` (Issue #3
 
 ## Active Milestone
 
-### Milestone 7: Validate the Review-Preparation Helper Through Use
+### Milestone 8: Manually Trigger the External Agent (Narrowest Slice)
 
-Objective: use `scripts/review-context.sh` during at least one real review cycle and evaluate whether it materially reduces review-preparation effort. This is a validation phase, not an implementation milestone — no new implementation issue is opened. It honors the forward-running gate: shipped automation must demonstrate value in real use before the next layer (triggering, productization) is opened. This mirrors Milestone 4, which validated the issue/handoff automation through use before any new construction.
+Objective: a single local invocation that takes an **existing** handoff (the artifact `scripts/new-handoff.sh` already produces) and starts **exactly one** external Software Engineer agent run against it. Nothing else.
 
-Done looks like: the helper has been run against at least one real PR review, and the next retrospective records whether it meaningfully reduced the manual review-prep sequence and what, if anything, the next evidence-backed increment should be.
+This opens the triggering layer ahead of Milestone 7's validation completing — a deliberate, bounded gate-override by the Product Owner. It does not skip validation: the slice is the smallest mechanical step (small at-risk investment), and it runs through the normal lifecycle so its PR is reviewed with `scripts/review-context.sh`, producing Milestone 7's real-use validation as a byproduct. A local manual trigger is the first step; event-wiring (GitHub Actions) is deferred until the manual trigger demonstrates value, keeping this milestone on the same internal gate discipline every prior milestone followed.
 
-Observations carried forward — recorded only; none has yet demonstrated enough friction to justify a cleanup increment:
+Explicitly out of scope until separately justified: orchestration, multi-agent coordination, retries, status polling, parsing or acting on agent output, looping over issues, and event-driven/GitHub Actions triggers.
 
-- Unused `contains()` helper in `review-context.sh` (dead code).
-- The zero-argument path (resolve the current branch's PR) is implemented but not directly covered by a test.
-- Above-threshold diffs still fetch the full diff before showing `--stat`, and `gh pr diff` runs up to three times per invocation.
-- Write-capable `gh` detection is a denylist; a future write subcommand not enumerated would not be flagged.
+### Milestone 7: Validate the Review-Preparation Helper Through Use (satisfied via Milestone 8's review)
 
-Deferred until separately justified: automatic triggering of the external agent (highest infrastructure cost), productization, and unifying `new-issue.sh`/`new-handoff.sh`. Explicitly out of scope until justified: agent orchestration, multi-agent communication infrastructure, and skills or GitHub integrations beyond demonstrated need.
+Objective unchanged: run `scripts/review-context.sh` against at least one real PR review and evaluate whether it materially reduces review-prep effort. Under the override above, this validation is now produced by reviewing Milestone 8's PR with the helper rather than by a standalone cycle. The next retrospective records whether it meaningfully reduced the manual review-prep sequence.
+
+Observations carried forward (recorded only; none yet justifies a cleanup increment): unused `contains()` helper; untested zero-arg path; above-threshold diffs still fetch the full diff before `--stat`, with `gh pr diff` running up to three times; write-capable `gh` detection is a denylist.
+
+Deferred until separately justified: productization, and unifying `new-issue.sh`/`new-handoff.sh`. Explicitly out of scope until justified: agent orchestration, multi-agent communication infrastructure, and skills or GitHub integrations beyond demonstrated need.
 
 ---
 
@@ -71,11 +72,9 @@ Deferred until separately justified: automatic triggering of the external agent 
 
 The Product Owner has decided to accelerate toward automation and, eventually, productizing this framework for other projects. This replaces the prior blanket "no automation" stance — but the gating logic stays: automate only what has been demonstrated through repeated manual use, starting with the narrowest, most mechanical step first. The gate now also runs forward: shipped automation must demonstrate value in real use before the next layer (triggering, productization) is opened.
 
-Milestone 6 is complete: the read-only review-preparation helper shipped (Issue #41, PR #43) and was reviewed APPROVE. But it has not yet been run against a real review — it could not review its own PR — so under the forward gate the next step is validation, not new construction.
+Milestone 6 is complete and Milestone 7's validation is underway. The Product Owner has chosen to open Milestone 8 (manual agent triggering) now under a bounded override of the forward gate. The Staff Engineer supports this: the slice is the narrowest mechanical step, the at-risk investment is small, and the override produces — rather than skips — the review-helper validation, because Milestone 8's PR is reviewed with `review-context.sh`.
 
-Recommended next step: use `review-context.sh` in the next one or two real review cycles and let that use decide the next increment (Milestone 7). This mirrors Milestone 4's validation phase. Hold the non-blocking observations from PR #43 (dead `contains()` helper, untested zero-arg path, diff double-fetch, denylist detection) as observations only; none has shown enough friction to justify a cleanup increment, and acting on them now would be speculation rather than demonstrated need.
-
-Triggering the external agent and productization remain gated until their cost is separately justified by a demonstrated pattern — and, per the forward gate, until the shipped review helper has proven its value in real use.
+Recommended next step: implement the narrowest manual trigger (one command → one agent run against an existing handoff), then let real use of it decide whether event-wiring or any further triggering layer is justified. Productization remains gated until separately justified.
 
 The prior dirty-tree friction in the handoff flow has been resolved: `.claude/settings.local.json` is now untracked and gitignored (Issue #31, PR #32), so routine permission grants no longer dirty the tree or block `new-handoff.sh`.
 
@@ -98,7 +97,7 @@ Premature infrastructure increases maintenance burden without validating that it
 
 Items requiring future discussion:
 
-- When to automate triggering the external agent (e.g., GitHub Actions firing on issue creation) — the automation loop's known frictions are now resolved (Milestone 5 complete), but triggering remains deferred behind lower-cost, higher-value increments until its infrastructure cost is justified.
+- How far to automate triggering the external agent **beyond the narrowest manual slice** (e.g., GitHub Actions firing on issue creation, status polling, looping over issues) — the manual one-shot trigger is now active as Milestone 8; everything past it stays deferred until the manual trigger demonstrates value.
 - What productization requires structurally (e.g., parameterizing CLAUDE.md/AGENTS.md, removing solo-builder-specific framing) — deferred until a reusability need is demonstrated rather than anticipated.
 - Whether to unify `new-issue.sh` and `new-handoff.sh` into a single flow — open only if the metadata/file-list seam between them recurs as friction; not yet observed to repeat.
 - Repository template structure beyond MVP.
