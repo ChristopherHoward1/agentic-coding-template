@@ -12,9 +12,9 @@ This document is jointly maintained by the Product Owner and the Staff Engineer 
 
 ## Current Objective
 
-Finish reducing the agent-driving friction in the issue/branch/handoff automation. Non-interactive flag mode now ships on both handoff scripts (`new-handoff.sh`, PR #35; `new-issue.sh`, PR #37). The remaining work is to validate `new-issue.sh`'s flag mode in one real cycle and resolve the one robustness bug that real use of the scripts exposed.
+The issue/branch/handoff automation is now feature-complete. Non-interactive flag mode ships on both scripts (`new-handoff.sh`, PR #35; `new-issue.sh`, PR #37), and the one robustness bug real use exposed — the empty-list `set -u` crash — is fixed (PR #40). Both scripts' flag modes have been validated in a real cycle: Issue #39 and its handoff were created through them. Milestone 6 is now selected: a read-only review-preparation helper (Issue #41), chosen on observed workflow evidence — the Staff Engineer reassembles the same review context by hand every cycle — rather than speculative automation.
 
-The Product Owner has decided to accelerate toward automation and eventual productization of this framework, but each step must still be justified by a pattern demonstrated through repeated use. Triggering and productization remain deferred until the validated automation's known frictions are addressed. See Staff Engineer Recommendations below.
+The Product Owner has decided to accelerate toward automation and eventual productization of this framework, but each step must still be justified by a pattern demonstrated through repeated use. With the automation loop's known frictions now resolved, the next increment is selected by expected value among evidence-backed candidates; triggering and productization remain gated until their cost is justified. See Staff Engineer Recommendations below.
 
 ---
 
@@ -36,30 +36,28 @@ The handoff format was formalized in CLAUDE.md (Issues #21/#25, PRs #22/#24). `s
 
 The issue/branch/handoff automation was validated across two real cycles: ShellCheck linting (Issue #28, PR #29) and the dirty-tree fix (Issue #31, PR #32). In both, the external agent implemented the scoped issue with no clarification requests and the resulting PR matched the handoff. The cycle also surfaced and resolved a self-referential friction: `.claude/settings.local.json` was git-tracked and rewritten by the Claude Code harness on every permission grant, dirtying the tree and blocking `new-handoff.sh`; it is now untracked and gitignored (PR #32). The metadata/file-list duplication and verification-prerequisite frictions noted after cycle 1 did not recur. One friction did recur without being resolved — driving the interactive scripts requires hand-built piped stdin — and is carried forward as the next increment.
 
+### Milestone 5: Non-Interactive Input for the Handoff Scripts — Complete
+
+Non-interactive flag mode shipped on both scripts — `new-handoff.sh` (Issue #34, PR #35) and `new-issue.sh` (Issue #36, PR #37) — removing the hand-built piped-stdin friction that recurred across both Milestone 4 cycles. Real use of the flag mode immediately exposed a latent robustness bug: rendering an issue or handoff with empty in-scope/out-of-scope lists aborted under `set -u` on bash 3.2 (`IN_SCOPE[@]: unbound variable`). It was fixed narrowly by guarding the empty-array render loops (Issue #39, PR #40); `new-handoff.sh` was confirmed already safe because validation requires its lists non-empty before the renderer is reached. Both scripts' flag modes were validated in a real cycle: Issue #39 was created through `new-issue.sh`'s flags and its handoff through `new-handoff.sh`'s flags.
+
 ---
 
 ## Active Milestone
 
-### Milestone 5: Non-Interactive Input for the Handoff Scripts
+### Milestone 6: Read-Only Review-Preparation Helper
 
-Scope: add a non-interactive input mode to `scripts/new-handoff.sh` (and `scripts/new-issue.sh` if the same friction applies) so an agent can supply all fields without driving sequential interactive prompts via hand-built piped stdin.
+Scope: add a read-only `scripts/review-context.sh` that assembles the context a Staff Engineer needs to review a pull request — the linked issue, the PR diff and changed-file list, and the repository's lint/test results — without making or recording any review decision (Issue #41).
 
-Justification: the interactive-script friction recurred across both Milestone 4 cycles (cycle 1 with #28, cycle 2 with #31), clearing the project's gating bar — an automation step is opened only by a pattern demonstrated through repeated use.
+Justification: reassembling review context by hand (reading the issue, fetching the PR and diff, running lint/tests) has repeated identically in every review cycle to date. It is the narrowest, most mechanical remaining step, is read-only, composes with the existing `gh`, lint, and test commands, and carries near-zero infrastructure cost — the best expected value among evidence-backed candidates. This clears the project's gate: automate only a pattern demonstrated through repeated manual use.
 
-Status: flag mode is implemented and merged on both scripts — `new-handoff.sh` (Issue #34, PR #35) and `new-issue.sh` (Issue #36, PR #37), the latter mirroring the former's pattern. `new-handoff.sh`'s flag mode has been exercised in a real cycle (it built the #36 handoff); `new-issue.sh`'s has not yet.
+Scope boundary: the helper gathers and prints; it must not emit a verdict, post a comment, approve, merge, or otherwise write to GitHub or mutate git state. Keep it read-only and composing; do not let it expand into orchestration.
 
-Remaining to close (per the forward-running gate — shipped automation must demonstrate value in real use):
+Candidates considered and deferred:
 
-1. Validate `new-issue.sh`'s flag mode by creating one real issue through its flags.
-2. Fix the robustness bug real use exposed: rendering an issue/handoff with empty in-scope/out-of-scope lists aborts under `set -u` on bash 3.2 (`IN_SCOPE[@]: unbound variable`), in both interactive and non-interactive modes, in `new-issue.sh` (and the same empty-array pattern should be checked in `new-handoff.sh`). Creating this fix's issue via `new-issue.sh`'s flags satisfies item 1 at the same time.
+- Automatic triggering of the external agent — the largest raw recurring friction, but the highest infrastructure cost; remains gated until its cost is separately justified.
+- Productization of the framework — deferred until a reusability need is demonstrated.
 
-Explicitly out of scope until separately justified:
-
-- Unifying `new-issue.sh` and `new-handoff.sh` into a single flow (the metadata/file-list duplication friction has not yet recurred).
-- Triggering the external agent automatically.
-- Productizing the framework.
-
-Design note: prefer the simplest mechanism that removes the friction (e.g., flags or a structured input file) over a redesign of the scripts. Keep the interactive mode working unless evidence shows it is unused.
+Explicitly out of scope until separately justified: agent orchestration, multi-agent communication infrastructure, and skills or GitHub integrations beyond demonstrated need.
 
 ---
 
@@ -69,9 +67,11 @@ Design note: prefer the simplest mechanism that removes the friction (e.g., flag
 
 The Product Owner has decided to accelerate toward automation and, eventually, productizing this framework for other projects. This replaces the prior blanket "no automation" stance — but the gating logic stays: automate only what has been demonstrated through repeated manual use, starting with the narrowest, most mechanical step first. The gate now also runs forward: shipped automation must demonstrate value in real use before the next layer (triggering, productization) is opened.
 
-Recommended next increment: a small robustness fix to harden the scripts against empty in-scope/out-of-scope lists (the `set -u` empty-array crash described under Milestone 5). It is justified as a real, reproduced bug — not speculation — and creating its issue through `new-issue.sh`'s new flag mode doubles as the real-use validation that lets Milestone 5 close. Keep the fix narrow; do not redesign the scripts. Two non-blocking observations from PR #37 may be folded into this increment if convenient: the duplicated inline `gh`-presence check in `new-issue.sh` could become a `require_gh` helper as in `new-handoff.sh`.
+Milestone 5 is complete: flag mode shipped on both scripts (PRs #35, #37), the empty-list `set -u` crash is fixed (PR #40), and both flag modes are validated in real use (Issue #39 and its handoff).
 
-The prior non-interactive-input increment is done: flag mode shipped on `new-handoff.sh` (PR #35) and `new-issue.sh` (PR #37), mirroring one pattern across both. Triggering and productization remain gated behind Milestone 5 closing.
+Recommended next increment: a read-only review-preparation helper. A normal feature cycle's largest remaining recurring human-orchestration steps are (a) carrying the rendered handoff to the external agent and (b) reassembling review context — reading CLAUDE.md/AGENTS.md/PLAN.md, fetching the issue and PR diff, and running lint/tests — by hand at the start of every review. Step (a) is the largest raw friction but the most expensive to automate (it is the triggering/orchestration layer the gate defers). Step (b) has repeated identically in every review to date, is read-only, composes with the existing `gh`, lint, and test commands, and carries near-zero infrastructure cost — the best expected value among evidence-backed candidates. It is the narrowest, most mechanical next step, consistent with the gating rule. Keep it read-only and composing; do not let it expand into orchestration.
+
+Triggering the external agent and productization remain gated until their cost is separately justified by a demonstrated pattern.
 
 The prior dirty-tree friction in the handoff flow has been resolved: `.claude/settings.local.json` is now untracked and gitignored (Issue #31, PR #32), so routine permission grants no longer dirty the tree or block `new-handoff.sh`.
 
@@ -94,8 +94,8 @@ Premature infrastructure increases maintenance burden without validating that it
 
 Items requiring future discussion:
 
-- When to automate triggering the external agent (e.g., GitHub Actions firing on issue creation) — deferred until the validated automation's known frictions are addressed (Milestone 5).
-- What productization requires structurally (e.g., parameterizing CLAUDE.md/AGENTS.md, removing solo-builder-specific framing) — deferred while the validated automation's frictions are addressed (Milestone 5).
+- When to automate triggering the external agent (e.g., GitHub Actions firing on issue creation) — the automation loop's known frictions are now resolved (Milestone 5 complete), but triggering remains deferred behind lower-cost, higher-value increments until its infrastructure cost is justified.
+- What productization requires structurally (e.g., parameterizing CLAUDE.md/AGENTS.md, removing solo-builder-specific framing) — deferred until a reusability need is demonstrated rather than anticipated.
 - Whether to unify `new-issue.sh` and `new-handoff.sh` into a single flow — open only if the metadata/file-list seam between them recurs as friction; not yet observed to repeat.
 - Repository template structure beyond MVP.
 - Introduction of reusable skills.
