@@ -146,6 +146,37 @@ test_noninteractive_dry_run_output_parity() {
   pass "$name"
 }
 
+test_empty_scope_lists_render_in_both_modes() {
+  local name="empty scope lists render and match in both modes"
+  local interactive_body
+  local noninteractive_body
+
+  run_script "My Title\nMy Goal\n\n\n\nMy AC\n\n" --dry-run
+  assert_status "$name" 0 || return
+  assert_output_contains "$name" "## Scope" || return
+  assert_output_contains "$name" "**In scope:**" || return
+  assert_output_contains "$name" "**Out of scope:**" || return
+  assert_output_not_contains "$name" "unbound variable" || return
+  interactive_body=$(issue_body_output)
+
+  run_script "" \
+    --dry-run \
+    --title "My Title" \
+    --goal "My Goal" \
+    --acceptance-criterion "My AC"
+  assert_status "$name" 0 || return
+  assert_output_not_contains "$name" "New Implementation Issue" || return
+  assert_output_contains "$name" "## Scope" || return
+  assert_output_contains "$name" "**In scope:**" || return
+  assert_output_contains "$name" "**Out of scope:**" || return
+  assert_output_not_contains "$name" "unbound variable" || return
+  noninteractive_body=$(issue_body_output)
+
+  assert_equals "$name" "$noninteractive_body" "$interactive_body" || return
+
+  pass "$name"
+}
+
 test_unrecognized_argument() {
   local name="unrecognized argument exits non-zero"
 
@@ -247,6 +278,7 @@ test_noninteractive_list_values_preserved() {
 
 test_dry_run_output
 test_noninteractive_dry_run_output_parity
+test_empty_scope_lists_render_in_both_modes
 test_unrecognized_argument
 test_empty_title
 test_empty_goal

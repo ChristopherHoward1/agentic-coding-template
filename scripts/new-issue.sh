@@ -97,15 +97,19 @@ render_body() {
   BODY+=$'\n'
   BODY+="**In scope:**"$'\n'
   BODY+=$'\n'
-  for item in "${IN_SCOPE[@]}"; do
-    BODY+="- $item"$'\n'
-  done
+  if [[ ${#IN_SCOPE[@]} -gt 0 ]]; then
+    for item in "${IN_SCOPE[@]}"; do
+      BODY+="- $item"$'\n'
+    done
+  fi
   BODY+=$'\n'
   BODY+="**Out of scope:**"$'\n'
   BODY+=$'\n'
-  for item in "${OUT_SCOPE[@]}"; do
-    BODY+="- $item"$'\n'
-  done
+  if [[ ${#OUT_SCOPE[@]} -gt 0 ]]; then
+    for item in "${OUT_SCOPE[@]}"; do
+      BODY+="- $item"$'\n'
+    done
+  fi
   BODY+=$'\n'
 
   BODY+="## Acceptance Criteria"$'\n'
