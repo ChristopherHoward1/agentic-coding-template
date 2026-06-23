@@ -23,5 +23,7 @@ shellcheck \
   scripts/lint.sh \
   scripts/new-issue.sh \
   scripts/new-handoff.sh \
+  scripts/review-context.sh \
   tests/test-new-issue.sh \
-  tests/test-new-handoff.sh
+  tests/test-new-handoff.sh \
+  tests/test-review-context.sh
