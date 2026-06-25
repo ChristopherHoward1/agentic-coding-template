@@ -24,6 +24,8 @@ shellcheck \
   scripts/new-issue.sh \
   scripts/new-handoff.sh \
   scripts/review-context.sh \
+  scripts/trigger-agent.sh \
   tests/test-new-issue.sh \
   tests/test-new-handoff.sh \
-  tests/test-review-context.sh
+  tests/test-review-context.sh \
+  tests/test-trigger-agent.sh
