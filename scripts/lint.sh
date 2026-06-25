@@ -19,13 +19,9 @@ if [[ "$REPO_ROOT" != "$CURRENT_DIR" ]]; then
   exit 1
 fi
 
-shellcheck \
-  scripts/lint.sh \
-  scripts/new-issue.sh \
-  scripts/new-handoff.sh \
-  scripts/review-context.sh \
-  scripts/trigger-agent.sh \
-  tests/test-new-issue.sh \
-  tests/test-new-handoff.sh \
-  tests/test-review-context.sh \
-  tests/test-trigger-agent.sh
+shopt -s nullglob
+shell_files=(scripts/*.sh tests/test-*.sh)
+
+if [[ ${#shell_files[@]} -gt 0 ]]; then
+  shellcheck "${shell_files[@]}"
+fi

@@ -163,5 +163,12 @@ fi
 
 print_section "Verification"
 run_check "lint" bash scripts/lint.sh
-run_check "test-new-issue" bash tests/test-new-issue.sh
-run_check "test-new-handoff" bash tests/test-new-handoff.sh
+
+shopt -s nullglob
+test_files=(tests/test-*.sh)
+
+if [[ ${#test_files[@]} -gt 0 ]]; then
+  for test_file in "${test_files[@]}"; do
+    run_check "$(basename "$test_file" .sh)" bash "$test_file"
+  done
+fi
