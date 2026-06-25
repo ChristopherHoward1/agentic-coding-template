@@ -12,7 +12,7 @@ This document is jointly maintained by the Product Owner and the Staff Engineer 
 
 ## Current Objective
 
-The read-only review-preparation helper shipped (`scripts/review-context.sh`, Issue #41, PR #43, reviewed APPROVE) and Milestone 7 opened to validate it through real use. The Product Owner has now decided to open the agent-triggering milestone (Milestone 8) immediately, deliberately overriding the forward gate that would otherwise require Milestone 7's validation to complete first. The override is bounded and does not skip validation: (a) the triggering slice is scoped to the smallest mechanical step — a single command that starts exactly one external agent run against an existing handoff — so the at-risk investment is small; and (b) Milestone 8 runs through the normal lifecycle, so its PR is reviewed with `scripts/review-context.sh`, producing Milestone 7's real-use validation as a byproduct rather than deferring it.
+Milestone 8 shipped (`scripts/trigger-agent.sh`, Issue #46, PR #48, reviewed REQUEST CHANGES then APPROVE): a single local command that starts exactly one headless Codex run against an existing handoff. Reviewing PR #48 with `scripts/review-context.sh` produced Milestone 7's real-use validation as planned — the helper materially reduced review-prep effort, while the same review exposed a recurring defect: the hardcoded shellcheck list in `lint.sh` and the hardcoded test list in `review-context.sh` both silently exclude newly added files. The Product Owner has promoted that root cause to the next increment (Milestone 9: replace the hardcoded lists with discovery). Two items remain owed: firing one live Codex run to validate the trigger end-to-end (Milestone 8's own real-use validation), and the Milestone 9 maintainability fix.
 
 The Product Owner is accelerating toward automation and eventual productization of this framework. Each step is still justified by a demonstrated pattern and scoped to the narrowest mechanical increment; the forward gate remains the default, and this override is a deliberate, bounded exception — not its removal. See Staff Engineer Recommendations below.
 
@@ -44,25 +44,29 @@ Non-interactive flag mode shipped on both scripts — `new-handoff.sh` (Issue #3
 
 `scripts/review-context.sh` shipped (Issue #41, PR #43): a read-only helper that assembles PR review context in one command — PR metadata/body, the linked issue and its acceptance criteria (resolved from a Closes/Fixes/Resolves reference), the changed-file list, the diff (or a stat summary above a size threshold), and the results of the repository's lint and test checks — without making or recording any review decision. The read-only boundary is enforced by a test that fails on any write-capable `gh` subcommand. The cycle dogfooded both Milestone 5 scripts (Issue #41 via `new-issue.sh`'s flags, the branch and handoff via `new-handoff.sh`'s flags) with no friction. Review was APPROVE: all acceptance criteria met, all four verification commands green under bash 3.2. Non-blocking observations were carried forward to the validation phase below.
 
+### Milestone 7: Validate the Review-Preparation Helper Through Use — Complete
+
+`scripts/review-context.sh` was exercised on a real review — PR #48's initial review and re-review. It materially reduced review-prep effort: one command assembled the PR metadata/body, the linked issue and its acceptance criteria, the changed-file list, the diff, and lint/test results, replacing the manual multi-step gather. The same cycle exposed a real limitation: the helper's test runner uses a hardcoded script list, so it silently never ran the PR's new `tests/test-trigger-agent.sh` while still reporting "All tests passed" — false confidence on exactly the new code under review. The reviewer caught it only by running the test manually. The identical hardcoded-list pattern in `lint.sh` had already forced PR #48 to be hand-patched to honor AC #6. Both are the same root cause, now promoted to Milestone 9.
+
+### Milestone 8: Manually Trigger the External Agent (Narrowest Slice) — Implementation Complete; live validation owed
+
+`scripts/trigger-agent.sh` shipped (Issue #46, PR #48): it takes an existing handoff path plus a `--dry-run` flag, runs preflight (path given, file non-empty, run from repo root, codex installed, clean working tree), and invokes `codex exec --sandbox workspace-write - < "$handoff"` exactly once, exiting with Codex's status without parsing its output. Hermetic tests (stubbed codex, bash 3.2) cover stdin delivery, dry-run, each preflight failure, and status propagation. Review was REQUEST CHANGES then APPROVE: the first pass found AC #6 hollow because `lint.sh` excluded the new script and test; the revision wired both in via a commit scoped to `lint.sh` only. One validation remains **owed**: the script has only ever run against a stubbed codex — a single live Codex run against a real handoff is still required to confirm end-to-end behavior before any further triggering layer is justified.
+
+Observations carried forward from Milestone 6 (recorded only; folded into Milestone 9 where relevant): unused `contains()` helper; untested zero-arg path; above-threshold diffs still fetch the full diff before `--stat`, with `gh pr diff` running up to three times; write-capable `gh` detection is a denylist.
+
 ---
 
 ## Active Milestone
 
-### Milestone 8: Manually Trigger the External Agent (Narrowest Slice)
+### Milestone 9: Replace Hardcoded File Lists with Discovery
 
-Objective: a single local invocation that takes an **existing** handoff (the artifact `scripts/new-handoff.sh` already produces) and starts **exactly one** external Software Engineer agent run against it. Nothing else.
+Objective: replace the hand-maintained shellcheck list in `scripts/lint.sh` and the hand-maintained test list in `scripts/review-context.sh` with discovery (e.g., globbing `scripts/*.sh` and `tests/test-*.sh`), so newly added scripts and tests are linted and run automatically. This is the promoted root cause behind two observed failures in the Milestone 8 cycle: AC #6 was hollow until `lint.sh` was hand-patched, and `review-context.sh` silently skipped the new test while still reporting success. It is a maintainability fix to existing automation rather than a new automation layer, so it is **not** gated behind Milestone 8's live-run validation.
 
-This opens the triggering layer ahead of Milestone 7's validation completing — a deliberate, bounded gate-override by the Product Owner. It does not skip validation: the slice is the smallest mechanical step (small at-risk investment), and it runs through the normal lifecycle so its PR is reviewed with `scripts/review-context.sh`, producing Milestone 7's real-use validation as a byproduct. A local manual trigger is the first step; event-wiring (GitHub Actions) is deferred until the manual trigger demonstrates value, keeping this milestone on the same internal gate discipline every prior milestone followed.
+Out of scope: changing what lint or the test runner do beyond which files they cover; any new triggering, orchestration, or productization capability.
 
-Explicitly out of scope until separately justified: orchestration, multi-agent coordination, retries, status polling, parsing or acting on agent output, looping over issues, and event-driven/GitHub Actions triggers.
+Carried forward (owed, independent of Milestone 9): one live Codex run via `scripts/trigger-agent.sh` against a real handoff, to validate Milestone 8 end-to-end and to decide whether event-wiring is justified.
 
-### Milestone 7: Validate the Review-Preparation Helper Through Use (satisfied via Milestone 8's review)
-
-Objective unchanged: run `scripts/review-context.sh` against at least one real PR review and evaluate whether it materially reduces review-prep effort. Under the override above, this validation is now produced by reviewing Milestone 8's PR with the helper rather than by a standalone cycle. The next retrospective records whether it meaningfully reduced the manual review-prep sequence.
-
-Observations carried forward (recorded only; none yet justifies a cleanup increment): unused `contains()` helper; untested zero-arg path; above-threshold diffs still fetch the full diff before `--stat`, with `gh pr diff` running up to three times; write-capable `gh` detection is a denylist.
-
-Deferred until separately justified: productization, and unifying `new-issue.sh`/`new-handoff.sh`. Explicitly out of scope until justified: agent orchestration, multi-agent communication infrastructure, and skills or GitHub integrations beyond demonstrated need.
+Deferred until separately justified: productization, and unifying `new-issue.sh`/`new-handoff.sh`. Explicitly out of scope until justified: agent orchestration, multi-agent communication infrastructure, retries/status polling, event-driven/GitHub Actions triggers, and skills or GitHub integrations beyond demonstrated need.
 
 ---
 
@@ -72,9 +76,14 @@ Deferred until separately justified: productization, and unifying `new-issue.sh`
 
 The Product Owner has decided to accelerate toward automation and, eventually, productizing this framework for other projects. This replaces the prior blanket "no automation" stance — but the gating logic stays: automate only what has been demonstrated through repeated manual use, starting with the narrowest, most mechanical step first. The gate now also runs forward: shipped automation must demonstrate value in real use before the next layer (triggering, productization) is opened.
 
-Milestone 6 is complete and Milestone 7's validation is underway. The Product Owner has chosen to open Milestone 8 (manual agent triggering) now under a bounded override of the forward gate. The Staff Engineer supports this: the slice is the narrowest mechanical step, the at-risk investment is small, and the override produces — rather than skips — the review-helper validation, because Milestone 8's PR is reviewed with `review-context.sh`.
+Milestones 6, 7, and 8 are complete. The bounded gate-override worked as intended: Milestone 8's narrowest-slice trigger shipped, and reviewing its PR with `review-context.sh` produced Milestone 7's validation rather than skipping it. That review also did what real use is supposed to do — it found a concrete defect (hardcoded file lists in `lint.sh` and `review-context.sh` that silently exclude new files), which is now Milestone 9.
 
-Recommended next step: implement the narrowest manual trigger (one command → one agent run against an existing handoff), then let real use of it decide whether event-wiring or any further triggering layer is justified. Productization remains gated until separately justified.
+Recommended next steps, in order:
+
+1. **Milestone 9** — replace the hardcoded shellcheck and test lists with discovery. Small, mechanical, and directly motivated by two observed failures; it is a fix to existing automation, not a new layer, so it proceeds now.
+2. **Fire the owed live Codex run** through `scripts/trigger-agent.sh` against a real handoff. Until this happens, Milestone 8 is validated only against a stub. This run is the forward gate for any further triggering layer (event-wiring, status polling, looping), all of which stay deferred until the live trigger demonstrates value.
+
+Productization remains gated until separately justified.
 
 The prior dirty-tree friction in the handoff flow has been resolved: `.claude/settings.local.json` is now untracked and gitignored (Issue #31, PR #32), so routine permission grants no longer dirty the tree or block `new-handoff.sh`.
 
@@ -97,7 +106,7 @@ Premature infrastructure increases maintenance burden without validating that it
 
 Items requiring future discussion:
 
-- How far to automate triggering the external agent **beyond the narrowest manual slice** (e.g., GitHub Actions firing on issue creation, status polling, looping over issues) — the manual one-shot trigger is now active as Milestone 8; everything past it stays deferred until the manual trigger demonstrates value.
+- How far to automate triggering the external agent **beyond the narrowest manual slice** (e.g., GitHub Actions firing on issue creation, status polling, looping over issues) — the manual one-shot trigger shipped in Milestone 8; everything past it stays deferred until a live Codex run demonstrates the trigger's value.
 - What productization requires structurally (e.g., parameterizing CLAUDE.md/AGENTS.md, removing solo-builder-specific framing) — deferred until a reusability need is demonstrated rather than anticipated.
 - Whether to unify `new-issue.sh` and `new-handoff.sh` into a single flow — open only if the metadata/file-list seam between them recurs as friction; not yet observed to repeat.
 - Repository template structure beyond MVP.
