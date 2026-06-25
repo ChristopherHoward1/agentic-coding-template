@@ -87,8 +87,10 @@ run_script() {
   log_file="$stub_dir/gh.log"
   make_gh_stub "$stub_dir/bin" "$log_file"
   make_check_stub "$stub_dir/scripts" "lint.sh" 0 "lint ok"
+  make_check_stub "$stub_dir/tests" "helper.sh" 1 "helper should not run"
   make_check_stub "$stub_dir/tests" "test-new-issue.sh" 2 "new issue failed"
   make_check_stub "$stub_dir/tests" "test-new-handoff.sh" 0 "new handoff ok"
+  make_check_stub "$stub_dir/tests" "test-zz.sh" 0 "zz discovered ok"
 
   LAST_OUTPUT=$(cd "$stub_dir" && mkdir -p .git && touch CLAUDE.md AGENTS.md && GH_STUB_LOG="$log_file" PATH="$stub_dir/bin:$PATH" "$BASH_BIN" "$SCRIPT_PATH" "$@" 2>&1)
   LAST_STATUS=$?
@@ -190,7 +192,13 @@ test_prints_context_and_captures_check_statuses() {
   assert_output_contains "$name" "diff --git a/scripts/review-context.sh b/scripts/review-context.sh" || return
   assert_output_contains "$name" "Exit status: 0" || return
   assert_output_contains "$name" "Exit status: 2" || return
+  assert_output_contains "$name" "Command: bash tests/test-new-handoff.sh" || return
+  assert_output_contains "$name" "Command: bash tests/test-new-issue.sh" || return
+  assert_output_contains "$name" "Command: bash tests/test-zz.sh" || return
   assert_output_contains "$name" "new issue failed" || return
+  assert_output_contains "$name" "zz discovered ok" || return
+  assert_output_not_contains "$name" "helper should not run" || return
+  assert_output_not_contains "$name" "Command: bash tests/helper.sh" || return
   assert_output_not_contains "$name" "approval" || return
   assert_output_not_contains "$name" "verdict" || return
   assert_log_contains "$name" "pr view 12 --json" || return
