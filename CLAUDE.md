@@ -114,6 +114,8 @@ PR Expectations:
 
 Do not implement the feature, spawn a sub-agent, or use Claude Code's Agent tool to perform implementation work. The handoff is a boundary — cross it only through the external agent the Product Owner designates.
 
+When a triggered agent implements and pushes its branch but cannot open its own pull request (e.g. the sandbox cannot reach api.github.com), the Product Owner files the PR from the agent's pushed branch using the agent's provided PR body. The Staff Engineer then reviews the diff on its merits. The filer is the Product Owner, not the Staff Engineer; this preserves the author/reviewer separation.
+
 ---
 
 ## Review
