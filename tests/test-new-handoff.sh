@@ -3,6 +3,8 @@ set -uo pipefail
 
 FAILURES=0
 LAST_OUTPUT=""
+LAST_STDOUT=""
+LAST_STDERR=""
 LAST_STATUS=0
 BASH_BIN=${BASH:-/bin/bash}
 
@@ -112,6 +114,42 @@ assert_output_not_contains() {
   return 1
 }
 
+assert_stdout_contains() {
+  local name="$1"
+  local expected="$2"
+
+  if contains "$LAST_STDOUT" "$expected"; then
+    return 0
+  fi
+
+  fail "$name" "expected stdout to contain: $expected"
+  return 1
+}
+
+assert_stdout_not_contains() {
+  local name="$1"
+  local unexpected="$2"
+
+  if ! contains "$LAST_STDOUT" "$unexpected"; then
+    return 0
+  fi
+
+  fail "$name" "expected stdout not to contain: $unexpected"
+  return 1
+}
+
+assert_stderr_contains() {
+  local name="$1"
+  local expected="$2"
+
+  if contains "$LAST_STDERR" "$expected"; then
+    return 0
+  fi
+
+  fail "$name" "expected stderr to contain: $expected"
+  return 1
+}
+
 assert_equals() {
   local name="$1"
   local actual="$2"
@@ -123,6 +161,103 @@ assert_equals() {
 
   fail "$name" "output did not match expected handoff"
   return 1
+}
+
+test_noninteractive_push_stdout_only_stderr_chatter() {
+  local name="non-interactive push writes only handoff to stdout"
+  local temp_repo
+  local origin_repo
+  local script_path
+  local stub_dir
+  local stdout_file
+  local stderr_file
+  local branch="feature/test-handoff-stdout-$$"
+  local expected
+
+  temp_repo=$(mktemp -d)
+  origin_repo=$(mktemp -d)
+  script_path="$(pwd)/scripts/new-handoff.sh"
+  stub_dir=$(mktemp -d)
+  stdout_file=$(mktemp)
+  stderr_file=$(mktemp)
+  make_gh_stub "$stub_dir"
+
+  (
+    cd "$temp_repo" || exit 1
+    git init -q
+    git checkout -q -b main
+    git config user.email "test@example.com"
+    git config user.name "Test User"
+    printf "" > CLAUDE.md
+    printf "" > AGENTS.md
+    git add CLAUDE.md AGENTS.md
+    git commit -q -m "Initial commit"
+    git init -q --bare "$origin_repo"
+    git remote add origin "$origin_repo"
+    git push -q -u origin main
+  )
+
+  (
+    cd "$temp_repo" || exit 1
+    PATH="$stub_dir:$PATH" "$BASH_BIN" "$script_path" \
+      --issue 25 \
+      --branch "$branch" \
+      --file-to-modify "scripts/new-handoff.sh" \
+      --file-to-modify "tests/test-new-handoff.sh" \
+      --file-not-to-modify "scripts/new-issue.sh" \
+      --file-not-to-modify "CLAUDE.md" \
+      --constraint "Follow repository conventions." \
+      --constraint "Preserve existing behavior." \
+      --verify "bash scripts/lint.sh" \
+      --verify "bash tests/test-new-handoff.sh" \
+      --pr-expectation "Open as ready for review." \
+      --pr-expectation "Include Closes #25." \
+      --push >"$stdout_file" 2>"$stderr_file"
+  )
+  LAST_STATUS=$?
+  LAST_STDOUT=$(cat "$stdout_file")
+  LAST_STDERR=$(cat "$stderr_file")
+
+  expected=$(cat <<EOF
+## Implementation Handoff
+
+Issue: #25 - Add scripts/new-handoff.sh to generate implementation handoffs
+Issue URL: https://github.com/example/repo/issues/25
+Branch: $branch
+Checkout confirmation: The repository is currently checked out on \`$branch\`.
+Files to Modify:
+- scripts/new-handoff.sh
+- tests/test-new-handoff.sh
+Files Not to Modify:
+- scripts/new-issue.sh
+- CLAUDE.md
+Key Constraints:
+- Follow repository conventions.
+- Preserve existing behavior.
+Acceptance Criteria:
+- See Issue #25: https://github.com/example/repo/issues/25
+Verification:
+- bash scripts/lint.sh
+- bash tests/test-new-handoff.sh
+PR Expectations:
+- Open as ready for review.
+- Include Closes #25.
+EOF
+)
+
+  rm -rf "$temp_repo" "$origin_repo" "$stub_dir" "$stdout_file" "$stderr_file"
+
+  assert_status "$name" 0 || return
+  assert_equals "$name" "$LAST_STDOUT" "$expected" || return
+  assert_stdout_not_contains "$name" "Already up to date." || return
+  assert_stdout_not_contains "$name" "Switched to a new branch" || return
+  assert_stdout_not_contains "$name" "set up to track" || return
+  assert_stdout_not_contains "$name" "Dry run: branch was not created" || return
+  assert_stderr_contains "$name" "Already up to date." || return
+  assert_stderr_contains "$name" "Switched to a new branch '$branch'" || return
+  assert_stderr_contains "$name" "set up to track" || return
+
+  pass "$name"
 }
 
 test_dry_run_output() {
@@ -377,6 +512,7 @@ test_pre_existing_branch() {
 
 test_dry_run_output
 test_noninteractive_dry_run_output_parity
+test_noninteractive_push_stdout_only_stderr_chatter
 test_noninteractive_missing_required_field
 test_noninteractive_list_values_preserved
 test_push_conflict

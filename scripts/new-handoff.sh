@@ -169,9 +169,9 @@ if [[ "$NON_INTERACTIVE" == false && "$DRY_RUN" == false ]] && [[ -n "$(git stat
 fi
 
 if [[ "$NON_INTERACTIVE" == false ]]; then
-  echo "New Implementation Handoff"
-  echo "--------------------------"
-  echo
+  echo "New Implementation Handoff" >&2
+  echo "--------------------------" >&2
+  echo >&2
 
   read -r -p "Issue number: " ISSUE_NUMBER
   [[ -z "$ISSUE_NUMBER" ]] && { echo "Error: issue number is required." >&2; exit 1; }
@@ -184,7 +184,7 @@ if [[ "$NON_INTERACTIVE" == false ]]; then
     exit 1
   fi
 
-  echo "Files to modify (one path per line, blank line to finish):"
+  echo "Files to modify (one path per line, blank line to finish):" >&2
   while true; do
     read -r -p "  - " item
     [[ -z "$item" ]] && break
@@ -192,7 +192,7 @@ if [[ "$NON_INTERACTIVE" == false ]]; then
   done
   [[ ${#FILES_TO_MODIFY[@]} -eq 0 ]] && { echo "Error: at least one file to modify is required." >&2; exit 1; }
 
-  echo "Files not to modify (one path per line, blank line to finish):"
+  echo "Files not to modify (one path per line, blank line to finish):" >&2
   while true; do
     read -r -p "  - " item
     [[ -z "$item" ]] && break
@@ -200,7 +200,7 @@ if [[ "$NON_INTERACTIVE" == false ]]; then
   done
   [[ ${#FILES_NOT_TO_MODIFY[@]} -eq 0 ]] && { echo "Error: at least one file not to modify is required." >&2; exit 1; }
 
-  echo "Key constraints (one item per line, blank line to finish):"
+  echo "Key constraints (one item per line, blank line to finish):" >&2
   while true; do
     read -r -p "  - " item
     [[ -z "$item" ]] && break
@@ -208,7 +208,7 @@ if [[ "$NON_INTERACTIVE" == false ]]; then
   done
   [[ ${#KEY_CONSTRAINTS[@]} -eq 0 ]] && { echo "Error: at least one key constraint is required." >&2; exit 1; }
 
-  echo "Verification commands (one command per line, blank line to finish):"
+  echo "Verification commands (one command per line, blank line to finish):" >&2
   while true; do
     read -r -p "  - " item
     [[ -z "$item" ]] && break
@@ -216,7 +216,7 @@ if [[ "$NON_INTERACTIVE" == false ]]; then
   done
   [[ ${#VERIFICATION[@]} -eq 0 ]] && { echo "Error: at least one verification command is required." >&2; exit 1; }
 
-  echo "PR expectations (one item per line, blank line to finish):"
+  echo "PR expectations (one item per line, blank line to finish):" >&2
   while true; do
     read -r -p "  - " item
     [[ -z "$item" ]] && break
@@ -247,18 +247,18 @@ ISSUE_URL=$(printf "%s" "$ISSUE_METADATA" | sed -n '3p')
 [[ -z "$ISSUE_URL" ]] && { echo "Error: could not retrieve issue URL from gh issue view." >&2; exit 1; }
 
 if [[ "$DRY_RUN" == false ]]; then
-  git fetch origin main
-  git checkout main
-  git pull --ff-only origin main
-  git checkout -b "$BRANCH"
+  git fetch origin main >&2
+  git checkout main >&2
+  git pull --ff-only origin main >&2
+  git checkout -b "$BRANCH" >&2
 
   if [[ "$NON_INTERACTIVE" == true ]]; then
-    [[ "$PUSH_BRANCH" == "true" ]] && git push -u origin "$BRANCH"
+    [[ "$PUSH_BRANCH" == "true" ]] && git push -u origin "$BRANCH" >&2
   else
     read -r -p "Push branch to origin? [y/N]: " PUSH_BRANCH
     case "$PUSH_BRANCH" in
       y|Y|yes|YES)
-      git push -u origin "$BRANCH"
+      git push -u origin "$BRANCH" >&2
       ;;
     esac
   fi
@@ -276,11 +276,11 @@ if [[ "$DRY_RUN" == false ]]; then
 fi
 
 if [[ "$DRY_RUN" == true ]]; then
-  echo
-  echo "Dry run: branch was not created and no GitHub writes were made."
-  echo
+  echo >&2
+  echo "Dry run: branch was not created and no GitHub writes were made." >&2
+  echo >&2
 else
-  echo
+  echo >&2
 fi
 
 render_handoff "$CHECKOUT_BRANCH"
