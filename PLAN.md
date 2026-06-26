@@ -110,6 +110,7 @@ Items requiring future discussion:
 - How far to automate triggering the external agent **beyond the narrowest manual slice** (e.g., GitHub Actions firing on issue creation, status polling, looping over issues) — the manual one-shot trigger shipped in Milestone 8 and is now validated by a live Codex run, so this decision is eligible to open; everything past the one-shot stays deferred until demonstrated repeated need justifies it.
 - What productization requires structurally (e.g., parameterizing CLAUDE.md/AGENTS.md, removing solo-builder-specific framing) — deferred until a reusability need is demonstrated rather than anticipated.
 - Whether to unify `new-issue.sh` and `new-handoff.sh` into a single flow — open only if the metadata/file-list seam between them recurs as friction; not yet observed to repeat.
+- When a triggered agent cannot open its own PR — Codex's sandbox could not reach `api.github.com` during the Milestone 9 run, so the agent implemented/committed/pushed but the Staff Engineer filed the PR (accepting a bounded author/reviewer overlap). Decide whether to codify that fallback as procedure and whether it justifies advancing the triggering layer; first occurrence only, so deferred until it recurs.
 - Repository template structure beyond MVP.
 - Introduction of reusable skills.
 - Additional persistent documentation.
