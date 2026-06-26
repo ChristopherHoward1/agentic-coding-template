@@ -12,7 +12,7 @@ This document is jointly maintained by the Product Owner and the Staff Engineer 
 
 ## Current Objective
 
-Milestone 9 shipped (Issue #50, PR #51, reviewed APPROVE): `lint.sh` and `review-context.sh` now derive their script/test lists from the filesystem, closing the hardcoded-list root cause behind both PR #48 failures. The fix validated itself during its own review — running `review-context.sh` on PR #51 executed all four test files, including the two the old hardcoded list silently skipped. The same cycle also discharged Milestone 8's owed live-run validation: the `trigger-agent.sh` invocation that drove this implementation was a real `codex exec` run (Codex v0.139.0, clean stdin delivery, correct preflight, exit 0), so the trigger is no longer stub-only and the forward gate on any further triggering layer is now eligible to open. No milestone is currently active; the leading candidate for the next increment is a small `new-handoff.sh` output fix (see Active Milestone and Recommendations).
+Milestone 9 shipped (Issue #50, PR #51, reviewed APPROVE): `lint.sh` and `review-context.sh` now derive their script/test lists from the filesystem, closing the hardcoded-list root cause behind both PR #48 failures. The fix validated itself during its own review — running `review-context.sh` on PR #51 executed all four test files, including the two the old hardcoded list silently skipped. The same cycle also discharged Milestone 8's owed live-run validation: the `trigger-agent.sh` invocation that drove this implementation was a real `codex exec` run (Codex v0.139.0, clean stdin delivery, correct preflight, exit 0), so the trigger is no longer stub-only and the forward gate on any further triggering layer is now eligible to open. The leading candidate at the time has since shipped: the `new-handoff.sh` output fix (Issue #54, PR #55) moved git operations and diagnostics to stderr so stdout carries only the rendered handoff, making it cleanly pipeable into `trigger-agent.sh`. No milestone is currently active (see Active Milestone and Recommendations).
 
 The Product Owner is accelerating toward automation and eventual productization of this framework. Each step is still justified by a demonstrated pattern and scoped to the narrowest mechanical increment; the forward gate remains the default, and this override is a deliberate, bounded exception — not its removal. See Staff Engineer Recommendations below.
 
@@ -58,13 +58,17 @@ Observations carried forward from Milestone 6 (recorded only): unused `contains(
 
 `scripts/lint.sh` and `scripts/review-context.sh` now derive their file lists from the filesystem (Issue #50, PR #51, reviewed APPROVE): `lint.sh` globs `scripts/*.sh` and `tests/test-*.sh`; `review-context.sh`'s verification keeps `run_check "lint"` and loops over discovered `tests/test-*.sh`. Both use `shopt -s nullglob` plus a guarded array-count check before expansion, avoiding the Milestone 5 `set -u`/empty-array regression on bash 3.2. The test runner matches `tests/test-*.sh` (not `tests/*.sh`), verified by a stub asserting non-test helpers are excluded; discovery is independent in each script (no shared helper). The fix validated itself in review — `review-context.sh` on PR #51 executed all four tests, including the two the old hardcoded list silently skipped — closing the root cause behind both PR #48 failures.
 
+### Milestone 10: Clean `new-handoff.sh` Output — Complete
+
+`scripts/new-handoff.sh` now writes its git operations (fetch/checkout/pull/push), dry-run notice, separators, and interactive prompts to stderr, so stdout carries only the rendered handoff (Issue #54, PR #55). This removes the manual-cleanup friction that recurred across the Milestone 8 and 9 trigger cycles, making the handoff cleanly pipeable into `trigger-agent.sh`; a test captures stdout and stderr separately to prove the split. The same cycle confirmed the second occurrence of the PR-ownership gap — the Codex agent implemented and pushed but its sandbox could not reach `api.github.com` — which subsequently justified codifying the manual fallback in CLAUDE.md (PR #56).
+
 ---
 
 ## Active Milestone
 
-None active. Milestones 8 and 9 are complete and the owed live-run validation is discharged. The next increment is under selection by the Product Owner.
+None active. Milestones 8, 9, and 10 are complete and Milestone 8's owed live-run validation is discharged. The next increment is under selection by the Product Owner.
 
-Leading candidate (Staff Engineer recommendation): a small `new-handoff.sh` output fix. Driving the now-real "pipe the handoff into `trigger-agent.sh`" workflow surfaced that `new-handoff.sh` interleaves git progress with the rendered handoff on stdout, so capturing it for the trigger needs manual cleanup. This friction has now recurred across two cycles (Milestone 8's handoff and Milestone 9's), clearing the proven-need bar. Likely scope: send git progress to stderr, or add a `--output <file>` flag that writes only the handoff. Narrow, mechanical, and motivated by repeated use.
+With the `new-handoff.sh` output fix shipped (Milestone 10), no narrowest-mechanical increment is currently queued from observed friction. The next move is a Product Owner direction call on the gated frontier below.
 
 Also now eligible (forward gate cleared by the live run): the open decision on how far to automate triggering beyond the one-shot — to be opened only when the Product Owner chooses, and still gated on demonstrated repeated need rather than opened automatically.
 
@@ -78,13 +82,13 @@ Deferred until separately justified: productization, and unifying `new-issue.sh`
 
 The Product Owner has decided to accelerate toward automation and, eventually, productizing this framework for other projects. This replaces the prior blanket "no automation" stance — but the gating logic stays: automate only what has been demonstrated through repeated manual use, starting with the narrowest, most mechanical step first. The gate now also runs forward: shipped automation must demonstrate value in real use before the next layer (triggering, productization) is opened.
 
-Milestones 6 through 9 are complete and Milestone 8's owed live-run validation is discharged. The bounded gate-override worked as intended end to end: the narrowest-slice trigger shipped, reviewing its PR with `review-context.sh` produced Milestone 7's validation, that review found the hardcoded-list defect (fixed in Milestone 9), and the Milestone 9 implementation was itself driven by the first live `trigger-agent.sh` run — discharging Milestone 8's validation as a byproduct. Each step continued to surface its own next increment from real use.
+Milestones 6 through 10 are complete and Milestone 8's owed live-run validation is discharged. The bounded gate-override worked as intended end to end: the narrowest-slice trigger shipped, reviewing its PR with `review-context.sh` produced Milestone 7's validation, that review found the hardcoded-list defect (fixed in Milestone 9), and the Milestone 9 implementation was itself driven by the first live `trigger-agent.sh` run — discharging Milestone 8's validation as a byproduct. Each step continued to surface its own next increment from real use.
 
 Recommended next step:
 
-1. **`new-handoff.sh` output fix** — separate git progress from the rendered handoff on stdout (stderr redirect or a `--output <file>` flag). Motivated by a friction that has now recurred across two trigger cycles; small and mechanical. Recommended as the next increment.
+1. **No queued mechanical increment.** The `new-handoff.sh` output fix shipped (Milestone 10, Issue #54, PR #55) and the manual PR-ownership fallback is now codified (PR #56). No further narrowest-mechanical increment is currently motivated by observed repeated friction. The next move is a Product Owner direction call on the gated frontier — most immediately, whether to open the deferred triggering-automation decision below.
 
-Beyond that, the forward gate on further triggering automation (event-wiring, status polling, looping) is now eligible to open, since the live run demonstrated the one-shot trigger's value — but it stays gated on demonstrated repeated need and opens only at the Product Owner's direction. Productization remains gated until separately justified.
+The forward gate on further triggering automation (event-wiring, status polling, looping) is now eligible to open, since the live run demonstrated the one-shot trigger's value — but it stays gated on demonstrated repeated need and opens only at the Product Owner's direction. Productization remains gated until separately justified.
 
 The prior dirty-tree friction in the handoff flow has been resolved: `.claude/settings.local.json` is now untracked and gitignored (Issue #31, PR #32), so routine permission grants no longer dirty the tree or block `new-handoff.sh`.
 
