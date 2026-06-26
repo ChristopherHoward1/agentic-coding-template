@@ -29,9 +29,10 @@ Run the linter and bash test scripts from the repository root:
 
 ```bash
 bash scripts/lint.sh
-bash tests/test-new-issue.sh
-bash tests/test-new-handoff.sh
+for t in tests/test-*.sh; do bash "$t"; done
 ```
+
+The linter and this loop discover their targets from the filesystem, so they cover every script and test in the repo without a hardcoded list.
 
 ## Repository Structure
 
@@ -42,6 +43,8 @@ bash tests/test-new-handoff.sh
 | `PLAN.md` | Shared planning artifact — current objectives, risks, recommendations, and open decisions. |
 | `scripts/new-issue.sh` | Interactive CLI to scaffold a new implementation issue from the standard template. |
 | `scripts/new-handoff.sh` | Interactive CLI to create a feature branch and generate the standard implementation handoff. |
+| `scripts/review-context.sh` | Read-only helper that assembles PR review context — metadata, linked issue and acceptance criteria, changed files, diff, and lint/test results — without making a review decision. |
+| `scripts/trigger-agent.sh` | Hands a completed implementation handoff to the external coding agent (one-shot `codex exec` invocation). |
 | `.github/ISSUE_TEMPLATE/implementation.md` | Issue template defining the standard structure for scoped implementation work. |
 
 ## Philosophy
