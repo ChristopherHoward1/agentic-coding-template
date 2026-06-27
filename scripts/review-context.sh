@@ -11,13 +11,6 @@ usage_error() {
   exit 1
 }
 
-contains() {
-  local haystack="$1"
-  local needle="$2"
-
-  [[ "$haystack" == *"$needle"* ]]
-}
-
 require_gh() {
   if ! command -v gh &>/dev/null; then
     echo "Error: gh CLI is not installed. Install it from https://cli.github.com and authenticate with 'gh auth login'." >&2
