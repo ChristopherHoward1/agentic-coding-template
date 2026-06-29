@@ -12,9 +12,9 @@ This document is jointly maintained by the Product Owner and the Staff Engineer 
 
 ## Current Objective
 
-Milestone 9 shipped (Issue #50, PR #51, reviewed APPROVE): `lint.sh` and `review-context.sh` now derive their script/test lists from the filesystem, closing the hardcoded-list root cause behind both PR #48 failures. The fix validated itself during its own review — running `review-context.sh` on PR #51 executed all four test files, including the two the old hardcoded list silently skipped. The same cycle also discharged Milestone 8's owed live-run validation: the `trigger-agent.sh` invocation that drove this implementation was a real `codex exec` run (Codex v0.139.0, clean stdin delivery, correct preflight, exit 0), so the trigger is no longer stub-only and the forward gate on any further triggering layer is now eligible to open. The leading candidate at the time has since shipped: the `new-handoff.sh` output fix (Issue #54, PR #55) moved git operations and diagnostics to stderr so stdout carries only the rendered handoff, making it cleanly pipeable into `trigger-agent.sh`. No milestone is currently active (see Active Milestone and Recommendations).
+Milestone 11 is active: adopt **parallel dependency-graph decomposition** as the planning foundation — a convention, not a tool (see Active Milestone). With that foundation in place, the Product Owner has set a deliberate acceleration path toward autonomous implementation, sequenced as three increments and dogfooded as a dependency graph (see Acceleration Roadmap).
 
-The Product Owner is accelerating toward automation and eventual productization of this framework. Each step is still justified by a demonstrated pattern and scoped to the narrowest mechanical increment; the forward gate remains the default, and this override is a deliberate, bounded exception — not its removal. See Staff Engineer Recommendations below.
+This is a direction shift. Through Milestone 10 every automation step was gated on demonstrated repeated friction. The three acceleration increments are explicitly **not** friction-justified — they are Product Owner acceleration overrides, justified prospectively by the throughput that parallel decomposition is expected to unlock. The friction gate still governs everything outside this named roadmap; the override is bounded to it, not a removal of the gate.
 
 ---
 
@@ -66,13 +66,24 @@ Observations carried forward from Milestone 6 (recorded only): ~~unused `contain
 
 ## Active Milestone
 
-None active. Milestones 8, 9, and 10 are complete and Milestone 8's owed live-run validation is discharged. The next increment is under selection by the Product Owner.
+### Milestone 11: Adopt Parallel Dependency-Graph Decomposition — Active
 
-With the `new-handoff.sh` output fix shipped (Milestone 10), no narrowest-mechanical increment is currently queued from observed friction. The next move is a Product Owner direction call on the gated frontier below.
+A planning convention with no graph engine, resolver, or visualizer. It defines: dependency edges recorded via native GitHub issue references; a per-issue **file-footprint** declaration; a **pre-dispatch pairwise disjointness check** across issues intended to run in parallel; a two-part parallel-eligibility rule (**disjoint file footprint AND no interface dependency**); live concurrent-run state read from `gh issue list`/`gh pr list`; and the dependency graph recorded once in a milestone tracking issue, not in PLAN.md. It lands in CLAUDE.md's Planning Expectations plus a one-line optional `## Dependencies` section in the issue template. No new script; the discovery-based lint and test runners stay green on a docs/template-only change. The foundation goes first because parallel throughput is meaningless without parallel-decomposed independent work, and the convention is cheap and validatable through use.
 
-Also now eligible (forward gate cleared by the live run): the open decision on how far to automate triggering beyond the one-shot — to be opened only when the Product Owner chooses, and still gated on demonstrated repeated need rather than opened automatically.
+Deferred until separately justified: productization, and unifying `new-issue.sh`/`new-handoff.sh`. Explicitly out of scope until justified: agent orchestration, multi-agent communication infrastructure, retries/status polling, and skills or GitHub integrations beyond demonstrated need. (Event-driven triggering and the auto-PR step are no longer blanket-deferred — they are sequenced in the Acceleration Roadmap below as bounded Product Owner overrides.)
 
-Deferred until separately justified: productization, and unifying `new-issue.sh`/`new-handoff.sh`. Explicitly out of scope until justified: agent orchestration, multi-agent communication infrastructure, retries/status polling, event-driven/GitHub Actions triggers, and skills or GitHub integrations beyond demonstrated need.
+---
+
+## Acceleration Roadmap (Dogfooded as a Dependency Graph)
+
+The Product Owner has chosen to accelerate toward autonomous implementation ahead of pure friction-evidence. The path is decomposed below using the Milestone 11 technique. **All three increments are Product Owner acceleration overrides — none is friction-justified. Sequence order is not a justification tier.**
+
+- **Foundation — Parallel decomposition (Milestone 11, active).** Depends on nothing new. Goes first: parallel throughput is meaningless without parallel-decomposed independent work, and the convention is cheap and validatable through use.
+- **Increment 1 — Auto-open the PR after the agent pushes.** Depends only on the already-shipped `trigger-agent.sh` and `new-handoff.sh` — nothing new. **The next build after the foundation.** Acceleration override, justified *prospectively*: once decomposition enables parallel batches, the ~10s manual `gh pr create` recurs N-fold per batch (one per concurrent run), and that projected N×cost — contingent on parallel throughput actually materializing — is the rationale. It is **not** friction-justified: the prior retrospective measured the per-occurrence cost at ~10s (below the automation bar) and judged the 3× recurrence to be one deterministic structural fact firing on every triggered run, not independent friction samples. When built: a wrapper around `trigger-agent.sh` (not inside it, preserving the one-shot contract), host-side under Product Owner credentials (preserving author/reviewer separation), hermetic tests, idempotency (no duplicate PR), success-gating (only on exit 0 with commits pushed), and loud degrade-to-manual.
+- **Increment 2 — Label-triggered agent runs.** Depends on the existing trigger; applying a GitHub label fires `trigger-agent.sh` in place of a manual command. Gated acceleration override. Planned and sequenced now, **not built this session.**
+- **Increment 3 — Agent-to-agent review/revise loop.** Depends on Increments 1 **and** 2 **and** on throughput being validated through use — the largest leap. Carries the correlated-validator risk (see Risks), so **the final merge stays human or independent** even if the loop is autonomous. Gated acceleration override. Planned and sequenced now, **not built this session.**
+
+Build order: Foundation → 1 → (2, 3, gated). Increment 3 opens only once decomposition + Increments 1–2 have demonstrated the throughput is worth the orchestration cost.
 
 ---
 
@@ -86,9 +97,9 @@ Milestones 6 through 10 are complete and Milestone 8's owed live-run validation 
 
 Recommended next step:
 
-1. **No queued mechanical increment.** The `new-handoff.sh` output fix shipped (Milestone 10, Issue #54, PR #55) and the manual PR-ownership fallback is now codified (PR #56). No further narrowest-mechanical increment is currently motivated by observed repeated friction. The next move is a Product Owner direction call on the gated frontier — most immediately, whether to open the deferred triggering-automation decision below.
+1. **Ship Milestone 11 (parallel decomposition), then Increment 1.** The foundation is a convention, not infrastructure, so the over-engineering risk is low; validate it through real use before leaning on it. Increment 1 (auto-open PR) follows as the first acceleration override — see the Acceleration Roadmap for its dependency edges, override rationale, and build constraints. Increments 2 and 3 are sequenced but gated; do not build them this session.
 
-The forward gate on further triggering automation (event-wiring, status polling, looping) is now eligible to open, since the live run demonstrated the one-shot trigger's value — but it stays gated on demonstrated repeated need and opens only at the Product Owner's direction. Productization remains gated until separately justified.
+The friction gate still governs everything outside the named Acceleration Roadmap. The roadmap is a bounded Product Owner override, not a removal of the gate; productization remains gated until separately justified.
 
 The prior dirty-tree friction in the handoff flow has been resolved: `.claude/settings.local.json` is now untracked and gitignored (Issue #31, PR #32), so routine permission grants no longer dirty the tree or block `new-handoff.sh`.
 
@@ -111,8 +122,8 @@ Premature infrastructure increases maintenance burden without validating that it
 
 Items requiring future discussion:
 
-- How far to automate triggering the external agent **beyond the narrowest manual slice** (e.g., GitHub Actions firing on issue creation, status polling, looping over issues) — the manual one-shot trigger shipped in Milestone 8 and is now validated by a live Codex run, so this decision is eligible to open; everything past the one-shot stays deferred until demonstrated repeated need justifies it.
-- Whether to automate **trigger-side PR creation** — opening the PR automatically after a successful triggered run, in a wrapper around `trigger-agent.sh` (not inside it, to preserve the one-shot trigger's narrow contract). Feasible without touching the sandbox: the wrapper runs on the host, which already has `gh` auth and network, after `codex exec` exits and the branch is pushed. Role-safe: running under the Product Owner's host credentials keeps the PR author the Product Owner, not the Staff Engineer, so the author/reviewer separation holds — the cost is losing the human checkpoint before a PR exists. Design seam: the agent's PR body must become a readable artifact (the agent writes it to an agreed path via a handoff-format change) or be synthesized from the issue and commits. **Bar to open — gated by cost, not capability:** the manual `gh pr create` step recurs every run but is currently trivial (~10 seconds), so it is not yet justified. Open it when either (a) manual filing becomes demonstrated repeated friction (volume or error-proneness), or (b) the triggering layer moves toward looped/unattended runs, for which auto-PR is the prerequisite — a loop has no human present to file the PR. If built: hermetic tests, idempotency (no duplicate PR), success-gating (only on exit 0 with commits pushed), and loud degrade-to-manual on failure.
+- How far to automate triggering the external agent **beyond the narrowest manual slice** — partially resolved into the Acceleration Roadmap: **Increment 2 (label-triggered runs)** is the chosen next step in this space, as a gated acceleration override. Anything past it (status polling, looping over issues) stays deferred until demonstrated repeated need justifies it, except where the Roadmap names it as a prerequisite for a sequenced increment.
+- Whether to automate **trigger-side PR creation** — **resolved into the Acceleration Roadmap as Increment 1, the next build.** The earlier cost-gate bar (manual `gh pr create` is ~10s, below the automation bar) is deliberately overridden by Product Owner choice rather than waiting for manual filing to become demonstrated friction; the prospective justification (parallel batches multiplying the ~10s cost N-fold) and the build constraints (host-side wrapper around `trigger-agent.sh`, PR-body as a readable artifact, idempotency, success-gating, degrade-to-manual) are recorded in the Roadmap. The design seam remains: the agent's PR body must be a readable artifact (written to an agreed path via a handoff-format change) or synthesized from the issue and commits.
 - What productization requires structurally (e.g., parameterizing CLAUDE.md/AGENTS.md, removing solo-builder-specific framing) — deferred until a reusability need is demonstrated rather than anticipated.
 - Whether to unify `new-issue.sh` and `new-handoff.sh` into a single flow — open only if the metadata/file-list seam between them recurs as friction; not yet observed to repeat.
 - When a triggered agent cannot open its own PR — **Resolved (manual fallback codified).** The sandbox-cannot-reach-`api.github.com` gap recurred on the next triggered run, clearing the two-occurrence proven-need bar, so the fallback is now procedure in CLAUDE.md (Implementation Handoff): the Product Owner files the PR from the agent's pushed branch using the agent's PR body, and the Staff Engineer reviews the diff on its merits. The filer is the Product Owner, not the Staff Engineer, preserving the author/reviewer separation. **Still open and gated:** whether this justifies building trigger-side PR automation is tracked as its own decision above; two occurrences justify codifying the manual fallback, not automating it.
@@ -134,6 +145,10 @@ The largest risk is building infrastructure before validating process. This risk
 Mitigation:
 
 Gate every automation step on a pattern that has actually repeated in manual use — not on convenience or speculation. Revisit this gate explicitly at the start of each new milestone.
+
+### Correlated Validators (Increment 3)
+
+An agent-to-agent review/revise loop pairs two LLM agents that share training blind spots, so the loop can converge on confident-but-wrong output that neither flags. Mitigation: the final merge decision stays human or independent even when the loop is autonomous, and Increment 3 is gated until decomposition and Increments 1–2 have proven the throughput justifies the orchestration cost.
 
 ### Documentation Sprawl
 
