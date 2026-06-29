@@ -30,6 +30,8 @@ Your scope is the issue. Nothing more.
 
 - Implement what the acceptance criteria require.
 - Do not refactor adjacent code, add speculative features, or improve things that are not broken.
+- Stay within the handoff's declared file footprint. Modify only files listed under `Files to Modify`; do not modify files listed under `Files Not to Modify` or owned by concurrent issues.
+- If satisfying the issue appears to require a file outside the declared footprint, stop and surface the need rather than expanding the footprint yourself.
 - If you encounter something outside your scope that seems worth addressing, note it in the PR description and leave it for a future issue.
 - If the acceptance criteria conflict or are ambiguous, stop and surface the conflict in a PR comment or description rather than silently resolving it.
 
