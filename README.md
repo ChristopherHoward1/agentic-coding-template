@@ -16,6 +16,8 @@ The system defines three roles:
 
 Work follows a deliberate lifecycle: goal → planning → issue → feature branch → implementation → pull request → review → merge → retrospective. The workflow is intentionally designed to make engineering judgment explicit, reviewable, and repeatable.
 
+Milestones can be decomposed into a dependency graph of issues. Independent issues — those with disjoint file footprints and no interface dependency — can run in parallel, while dependent work is serialized with explicit issue references. The implementation issue template includes an optional `## Dependencies` section for recording those edges.
+
 ## Getting Started
 
 1. Clone this repository.
