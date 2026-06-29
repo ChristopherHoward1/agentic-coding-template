@@ -22,6 +22,10 @@ Keep this concise and avoid duplicating PLAN.md.
 
 **Out of scope:**
 
+## Dependencies
+
+GitHub issue dependencies, such as `Depends on #N`. Remove if none.
+
 ## Acceptance Criteria
 
 - [ ] 

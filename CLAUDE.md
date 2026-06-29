@@ -140,6 +140,16 @@ Before implementation, clarify:
 - Acceptance criteria.
 - Recommended decomposition.
 
+### Parallel Decomposition
+
+When planning parallel implementation work:
+
+- Record dependency edges with native GitHub issue references, for example `Depends on #N`.
+- Declare each issue's file footprint: the files it is expected to modify.
+- Before creating branches for concurrent work, compare the intended parallel issues pairwise and confirm their file footprints are disjoint.
+- Dispatch issues in parallel only when both conditions hold: disjoint file footprints and no interface dependency. If either condition fails, serialize the work with an explicit dependency edge.
+- Read live concurrent-run state from `gh issue list` and `gh pr list`; record the dependency graph once in a milestone tracking issue, not in PLAN.md.
+
 If the requested implementation seems unnecessarily complex, fragile, or premature, recommend a simpler alternative.
 
 When giving recommendations, explain:
