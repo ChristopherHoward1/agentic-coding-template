@@ -74,6 +74,8 @@ Product Goal
 
 Do not bypass planning or review because this is a solo-developer repository.
 
+The `main` branch is protected: every change reaches `main` through a pull request, and direct pushes are rejected — including trivial or documentation-only changes. Do not offer or attempt a direct `git push origin main`; branch, open a PR, and merge it. Do not delete a feature branch until its merge (or push to the destination) is confirmed.
+
 The retrospective is a conversation that may result in updates to PLAN.md or CLAUDE.md. It does not produce a separate artifact.
 
 ---
