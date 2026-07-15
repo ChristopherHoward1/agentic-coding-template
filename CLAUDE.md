@@ -43,6 +43,8 @@ Reject:
 
 Do not introduce automation, reusable skills, orchestration, or extra documentation unless repeated practical need justifies it.
 
+The operating system encodes no domain's evaluation, data, or regulatory standards as universal; the project declares the regime that applies to it.
+
 ---
 
 ## Session Startup
@@ -75,6 +77,8 @@ Product Goal
 Do not bypass planning or review because this is a solo-developer repository.
 
 The `main` branch is protected: every change reaches `main` through a pull request, and direct pushes are rejected — including trivial or documentation-only changes. Do not offer or attempt a direct `git push origin main`; branch, open a PR, and merge it. Do not delete a feature branch until its merge (or push to the destination) is confirmed.
+
+Not all lifecycle work ends in merged code. When a work item's purpose is to reduce uncertainty, its deliverable may be a recommendation, a benchmark, or a validated or rejected hypothesis; such work still moves through issue → branch → PR → review, and records its outcome as a decision in PLAN.md or an issue comment rather than a new artifact type.
 
 The retrospective is a conversation that may result in updates to PLAN.md or CLAUDE.md. It does not produce a separate artifact.
 
@@ -140,6 +144,8 @@ Before implementation, clarify:
 - Acceptance criteria.
 - Recommended decomposition.
 
+Uncertainty-reducing work declares its stopping condition before it starts — what result is good enough, or what would make further work not worth its cost. This is the investigation analog of the automation friction gate.
+
 ### Parallel Decomposition
 
 When planning parallel implementation work:
@@ -198,6 +204,8 @@ When additional project documents exist, use them as needed:
 
 Prefer pointers to authoritative files over duplicating information.
 
+A project may adopt a project-type profile — project-independent guidance for a class of work — that supplements but never replaces this operating model. A profile composes with and points at the base concerns rather than duplicating or overriding them.
+
 ---
 
 ## Documentation Philosophy
@@ -224,6 +232,10 @@ Use the repository’s existing test, typecheck, lint, formatting, and build com
 Do not invent project commands. If commands are unclear, inspect the repository before recommending or running them.
 
 Do not use Claude as a substitute for a formatter or linter.
+
+Acceptance criteria may be behavioral as well as mechanical. A mechanical criterion is settled by deterministic checks; a behavioral criterion must name its evaluation method and the evidence that satisfies it. A change can be software-correct yet behaviorally unacceptable.
+
+A system is not independently validated merely because it evaluates itself; when a validator shares a component, model family, or training distribution with the thing under test, treat its agreement as correlated, not independent.
 
 ---
 
