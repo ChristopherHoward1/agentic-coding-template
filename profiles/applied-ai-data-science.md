@@ -12,7 +12,7 @@ Every project using this profile declares these seams before implementation scop
 
 - [DATA_SOURCES]
 - [DATA_LICENSE_CONSENT]
-- [EVAL_METRIC]
+- [EVAL_METRIC] (or NONE, when evaluation is criterion/command-based rather than a metric over a dataset)
 - [GROUND_TRUTH_SOURCE]
 - [EVAL_CRITERION]
 - [EVAL_COMMAND]
@@ -55,7 +55,7 @@ Exit condition: implementation is complete, checks pass, and the PR gives the re
 
 Entry condition: the system, model, workflow, or analysis is in real use or ready for release.
 
-Work: monitor drift, failures, data changes, user feedback, cost, latency where applicable, and evaluation regression against [EVAL_METRIC] / [EVAL_CRITERION].
+Work: monitor drift, failures, data changes, user feedback, cost, latency where applicable, and evaluation regression against [EVAL_METRIC] when one exists, otherwise [EVAL_CRITERION].
 
 Exit condition: continue operating, return to Investigate for new uncertainty, or return to Frame when the problem definition or data regime changes.
 
@@ -83,8 +83,8 @@ First classify online-vs-offline:
 Then include only triggered sections; each item below is include-if-triggered:
 
 - Data source and consent — triggered when [DATA_SOURCES] or [DATA_LICENSE_CONSENT] affects collection, use, retention, or sharing.
-- Ground truth — triggered when [GROUND_TRUTH_SOURCE] requires labeling, human judgment, synthetic data, benchmark data, or proxy labels.
-- Evaluation — triggered for every DS project; bind [EVAL_METRIC], [EVAL_CRITERION], and [EVAL_COMMAND] to reviewable evidence.
+- Ground truth — triggered when [GROUND_TRUTH_SOURCE] requires labeling, human judgment, synthetic data, benchmark data, proxy labels, or is NONE by design; answer with the source, or with why no ground truth is legitimate for this project.
+- Evaluation — triggered for every DS project; bind [EVAL_CRITERION] and [EVAL_COMMAND] to reviewable evidence, bind [EVAL_METRIC] only when the evaluation actually uses a metric, and distinguish product outputs from eval metrics.
 - Leakage and holdout discipline — triggered when training, tuning, retrieval construction, prompt selection, or manual inspection can contaminate evaluation.
 - Runtime and serving — triggered only for online or hybrid systems; cover latency, cost, failure behavior, and fallback.
 - Data operations — triggered when ingestion, versioning, lineage, refresh cadence, or schema drift can change behavior.
@@ -102,13 +102,13 @@ DS-specific evaluation should name:
 - Leakage and holdout discipline — what data is excluded from tuning, prompt iteration, retrieval construction, and manual exploration.
 - Evaluator correlation — whether the same model, prompt family, author, dataset source, or labeling process appears on both sides of the evaluation.
 - Non-determinism handling — seeds, repeated runs, confidence intervals, thresholds, or qualitative review rules where exact repeatability is not realistic.
-- Evaluation artifacts as review inputs — metrics, confusion/error slices, sample outputs, labeled examples, notebooks, logs, or reports needed to review the claim.
+- Evaluation artifacts as review inputs — metrics when they are true eval metrics, property checks, deterministic thresholds, confusion/error slices, sample outputs, labeled examples, notebooks, logs, or reports needed to review the claim.
 
 ## Notebook Strategy
 
 Include this section only when [NOTEBOOK_STRATEGY] declares notebooks part of the work.
 
-Declare whether notebooks are exploratory scratch, review artifacts, reproducible reports, or source-of-truth analysis. If a notebook supports a PR claim, it must have a clear rerun path, named inputs, and outputs that map to [EVAL_METRIC], [EVAL_CRITERION], or [EVAL_COMMAND].
+Declare whether notebooks are exploratory scratch, review artifacts, reproducible reports, or source-of-truth analysis. If a notebook supports a PR claim, it must have a clear rerun path, named inputs, and outputs that map to [EVAL_METRIC] when one exists, [EVAL_CRITERION], or [EVAL_COMMAND].
 
 ## Domain Declaration
 
