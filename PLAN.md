@@ -14,61 +14,28 @@ This document is jointly maintained by the Product Owner and the Staff Engineer 
 
 Milestones 1–12 are complete: the planning/handoff/review tooling is shipped and validated, and **parallel dependency-graph decomposition** is adopted and validated under real parallelism (Milestone 12). **Milestone 13 is now active** — authoring the first project-type profile (Applied AI & Data Science) as the first productization step: surgical, permanent base primitives plus a provisional profile skeleton, validated by a real hand-pass (see Active Milestone). The separate **Acceleration Roadmap** track (autonomous-implementation increments) remains at rest.
 
-Increment 1 (auto-open the PR after the agent pushes) has been **dropped**: Milestone 12 measured the friction it targeted — manual PR filing — as below the automation bar at current scale, so its premise failed empirically. Dropping it does not re-open the friction gate, which still governs everything outside any named acceleration roadmap; the gate was always a bounded Product Owner override, not removed.
+Increment 1 (auto-open the PR after the agent pushes) has been **dropped** — its premise failed empirically (full reasoning in the Acceleration Roadmap). Dropping it does not re-open the friction gate, which still governs everything outside any named acceleration roadmap; the gate was always a bounded Product Owner override, not removed.
 
 ---
 
 ## Completed Milestones
 
-### Milestone 1: Foundation — Complete
+Milestones 1–12 built and validated the planning/handoff/review toolchain, each surfacing its own next increment from real use rather than speculation. The table is orientation, not a changelog; the How for any entry lives in the linked issues/PRs and git history. Reasoning that outlived its milestone is carried in the Active Milestone, Acceleration Roadmap, or Open Decisions sections and pointed to below.
 
-Core repository artifacts shipped: CLAUDE.md, PLAN.md, AGENTS.md, README.md, issue and PR templates, `scripts/new-issue.sh`. The Staff Engineer / Product Owner collaboration model is established and the planning process is repeatable across sessions.
-
-### Milestone 2: External Agent Validation — Complete
-
-The manual handoff process was validated across two implementation cycles. External agents completed scoped issues without clarification requests. Git ownership boundaries, scope discipline, and handoff quality all held. The implementation handoff has emerged as a first-class workflow artifact.
-
-### Milestone 3: Targeted Automation of Issue/Branch/Handoff Creation — Complete
-
-The handoff format was formalized in CLAUDE.md (Issues #21/#25, PRs #22/#24). `scripts/new-handoff.sh` (Issue #25, PR #26) now creates and pushes the feature branch and renders the canonical handoff from issue metadata, composing with the existing `scripts/new-issue.sh`. The review cycle caught and corrected a non-hermetic test before merge.
-
-### Milestone 4: Validate the Automation Through Use — Complete
-
-The issue/branch/handoff automation was validated across two real cycles: ShellCheck linting (Issue #28, PR #29) and the dirty-tree fix (Issue #31, PR #32). In both, the external agent implemented the scoped issue with no clarification requests and the resulting PR matched the handoff. The cycle also surfaced and resolved a self-referential friction: `.claude/settings.local.json` was git-tracked and rewritten by the Claude Code harness on every permission grant, dirtying the tree and blocking `new-handoff.sh`; it is now untracked and gitignored (PR #32). The metadata/file-list duplication and verification-prerequisite frictions noted after cycle 1 did not recur. One friction did recur without being resolved — driving the interactive scripts requires hand-built piped stdin — and is carried forward as the next increment.
-
-### Milestone 5: Non-Interactive Input for the Handoff Scripts — Complete
-
-Non-interactive flag mode shipped on both scripts — `new-handoff.sh` (Issue #34, PR #35) and `new-issue.sh` (Issue #36, PR #37) — removing the hand-built piped-stdin friction that recurred across both Milestone 4 cycles. Real use of the flag mode immediately exposed a latent robustness bug: rendering an issue or handoff with empty in-scope/out-of-scope lists aborted under `set -u` on bash 3.2 (`IN_SCOPE[@]: unbound variable`). It was fixed narrowly by guarding the empty-array render loops (Issue #39, PR #40); `new-handoff.sh` was confirmed already safe because validation requires its lists non-empty before the renderer is reached. Both scripts' flag modes were validated in a real cycle: Issue #39 was created through `new-issue.sh`'s flags and its handoff through `new-handoff.sh`'s flags.
-
-### Milestone 6: Read-Only Review-Preparation Helper — Complete
-
-`scripts/review-context.sh` shipped (Issue #41, PR #43): a read-only helper that assembles PR review context in one command — PR metadata/body, the linked issue and its acceptance criteria (resolved from a Closes/Fixes/Resolves reference), the changed-file list, the diff (or a stat summary above a size threshold), and the results of the repository's lint and test checks — without making or recording any review decision. The read-only boundary is enforced by a test that fails on any write-capable `gh` subcommand. The cycle dogfooded both Milestone 5 scripts (Issue #41 via `new-issue.sh`'s flags, the branch and handoff via `new-handoff.sh`'s flags) with no friction. Review was APPROVE: all acceptance criteria met, all four verification commands green under bash 3.2. Non-blocking observations were carried forward to the validation phase below.
-
-### Milestone 7: Validate the Review-Preparation Helper Through Use — Complete
-
-`scripts/review-context.sh` was exercised on a real review — PR #48's initial review and re-review. It materially reduced review-prep effort: one command assembled the PR metadata/body, the linked issue and its acceptance criteria, the changed-file list, the diff, and lint/test results, replacing the manual multi-step gather. The same cycle exposed a real limitation: the helper's test runner uses a hardcoded script list, so it silently never ran the PR's new `tests/test-trigger-agent.sh` while still reporting "All tests passed" — false confidence on exactly the new code under review. The reviewer caught it only by running the test manually. The identical hardcoded-list pattern in `lint.sh` had already forced PR #48 to be hand-patched to honor AC #6. Both are the same root cause, now promoted to Milestone 9.
-
-### Milestone 8: Manually Trigger the External Agent (Narrowest Slice) — Complete
-
-`scripts/trigger-agent.sh` shipped (Issue #46, PR #48): it takes an existing handoff path plus a `--dry-run` flag, runs preflight (path given, file non-empty, run from repo root, codex installed, clean working tree), and invokes `codex exec --sandbox workspace-write - < "$handoff"` exactly once, exiting with Codex's status without parsing its output. Hermetic tests (stubbed codex, bash 3.2) cover stdin delivery, dry-run, each preflight failure, and status propagation. Review was REQUEST CHANGES then APPROVE: the first pass found AC #6 hollow because `lint.sh` excluded the new script and test; the revision wired both in via a commit scoped to `lint.sh` only. The previously-owed live validation is now discharged: the trigger drove the Milestone 9 implementation as a real `codex exec` run (Codex v0.139.0, clean stdin delivery, exit 0), confirming end-to-end behavior against a real binary rather than a stub. One known property surfaced: Codex's sandbox could not reach `api.github.com`, so the agent implemented/committed/pushed but could not open its own PR; the Staff Engineer filed it.
-
-Observations carried forward from Milestone 6 (recorded only): ~~unused `contains()` helper~~ (removed in Issue #60 / PR #61 as a workflow-exercise dogfood, not an earned increment); untested zero-arg path; above-threshold diffs still fetch the full diff before `--stat`, with `gh pr diff` running up to three times; write-capable `gh` detection is a denylist. Three observations remain recorded-only.
-
-### Milestone 9: Replace Hardcoded File Lists with Discovery — Complete
-
-`scripts/lint.sh` and `scripts/review-context.sh` now derive their file lists from the filesystem (Issue #50, PR #51, reviewed APPROVE): `lint.sh` globs `scripts/*.sh` and `tests/test-*.sh`; `review-context.sh`'s verification keeps `run_check "lint"` and loops over discovered `tests/test-*.sh`. Both use `shopt -s nullglob` plus a guarded array-count check before expansion, avoiding the Milestone 5 `set -u`/empty-array regression on bash 3.2. The test runner matches `tests/test-*.sh` (not `tests/*.sh`), verified by a stub asserting non-test helpers are excluded; discovery is independent in each script (no shared helper). The fix validated itself in review — `review-context.sh` on PR #51 executed all four tests, including the two the old hardcoded list silently skipped — closing the root cause behind both PR #48 failures.
-
-### Milestone 10: Clean `new-handoff.sh` Output — Complete
-
-`scripts/new-handoff.sh` now writes its git operations (fetch/checkout/pull/push), dry-run notice, separators, and interactive prompts to stderr, so stdout carries only the rendered handoff (Issue #54, PR #55). This removes the manual-cleanup friction that recurred across the Milestone 8 and 9 trigger cycles, making the handoff cleanly pipeable into `trigger-agent.sh`; a test captures stdout and stderr separately to prove the split. The same cycle confirmed the second occurrence of the PR-ownership gap — the Codex agent implemented and pushed but its sandbox could not reach `api.github.com` — which subsequently justified codifying the manual fallback in CLAUDE.md (PR #56).
-
-### Milestone 11: Adopt Parallel Dependency-Graph Decomposition — Complete
-
-The parallel-decomposition convention shipped (Issue #65, PR #66, reviewed APPROVE): CLAUDE.md's Planning Expectations now documents recording dependency edges via native GitHub issue references, per-issue file-footprint declaration, a pre-dispatch pairwise disjointness check, the two-part parallel-eligibility rule (disjoint footprint AND no interface dependency, else serialize via an edge), and reading live run-state from `gh issue list`/`gh pr list` with the graph recorded in a milestone tracking issue, not PLAN.md. The issue template gained an optional `## Dependencies` section. It is a convention, not infrastructure — no new script — and the discovery-based lint/test runners stayed green. The cycle dogfooded the full lifecycle end to end (planning PR → `new-issue.sh`/`new-handoff.sh` flag modes → live `trigger-agent.sh` run → `review-context.sh` review → merge); the agent held scope exactly and the review was a clean first-pass APPROVE.
-
-### Milestone 12: Validate Decomposition Under Real Parallelism — Complete
-
-The decomposition convention was exercised on its first genuinely parallel batch (tracking issue #70): two file-disjoint issues — #68 (README.md, PR #71) and #69 (AGENTS.md, PR #72) — were dispatched to two `codex` agents running **concurrently in isolated clones**, then both merged to `main`. The convention's core claim held: each agent stayed within its declared footprint under true concurrency (neither touched the other's file, aided by listing the concurrent issue's file under `Files Not to Modify`), and the two disjoint branches merged with no conflict (#72 was `MERGEABLE CLEAN` against the post-#71 `main`). This discharges Milestone 11's owed validation. **Measured-N:** the manual PR filings were trivial (~seconds each), so the parallel amplification of PR-filing cost is real but small per occurrence — which collapsed Increment 1's premise (now dropped; see Acceleration Roadmap). Two infrastructure findings surfaced: `trigger-agent.sh` is worktree-incompatible (now attached to Increment 2's roadmap edge) and `new-issue.sh`'s renderer omits the issue template's `## Dependencies` section (under Open Decisions).
+| # | What shipped | What it discovered / why it mattered |
+|---|---|---|
+| 1 | Core repo artifacts (CLAUDE.md, PLAN.md, AGENTS.md, README, issue/PR templates, `new-issue.sh`) and the Staff Engineer / Product Owner model. | Planning process made repeatable across sessions. |
+| 2 | Validated the manual handoff across two external-agent cycles. | Handoff emerged as a first-class workflow artifact; scope and git-ownership boundaries held. |
+| 3 | `new-handoff.sh` — creates/pushes the branch and renders the canonical handoff (Issues #21/#25, PRs #22/#24/#26). | Review caught a non-hermetic test before merge. |
+| 4 | Validated the automation across two cycles (ShellCheck #28/#29; dirty-tree fix #31/#32). | Surfaced that git-tracked `.claude/settings.local.json` dirtied the tree on every permission grant (now gitignored); left the piped-stdin friction as the next increment. |
+| 5 | Non-interactive flag mode on both scripts (#34/#35, #36/#37). | Real use exposed a `set -u`/empty-array crash on bash 3.2, fixed narrowly (#39/#40). |
+| 6 | `review-context.sh` — read-only PR-review context assembler (#41/#43). | Read-only boundary enforced by test; dogfooded the M5 scripts with no friction. |
+| 7 | Validated `review-context.sh` on a real review (PR #48). | Exposed a hardcoded test-list that reported "all passed" while silently skipping the new test — false confidence on the code under review; root cause promoted to M9. |
+| 8 | `trigger-agent.sh` — one-shot `codex exec` from a handoff path (#46/#48). | First live run drove the M9 implementation; surfaced that Codex's sandbox can't reach api.github.com, so the agent can't open its own PR. Three non-blocking observations remain recorded-only (untested zero-arg path; repeated `gh pr diff` on above-threshold diffs; denylist-based write detection). |
+| 9 | Replaced hardcoded file lists with filesystem discovery in `lint.sh`/`review-context.sh` (#50/#51). | Closed the false-"all passed" defect M7 found; validated itself in review by running the previously-skipped tests. |
+| 10 | `new-handoff.sh` writes git chatter to stderr; stdout carries only the handoff (#54/#55). | Made the handoff cleanly pipeable into the trigger; confirmed the PR-ownership gap a second time → codified manual fallback in CLAUDE.md (PR #56). |
+| 11 | Parallel dependency-graph decomposition convention in CLAUDE.md (#65/#66). | A convention, not infrastructure — no new script; issue template gained `## Dependencies`. |
+| 12 | Validated decomposition on the first real parallel batch — two file-disjoint agents in isolated clones, both merged clean (tracking issue #70, PRs #71/#72). | Measured per-PR filing as trivial (~seconds each), collapsing Increment 1's premise (see Acceleration Roadmap); surfaced two gated infra findings — `trigger-agent.sh` worktree-incompatibility and the `new-issue.sh` `## Dependencies` omission (see Open Decisions). |
 
 ---
 
@@ -104,30 +71,19 @@ The roadmap is at a rest state. No increment is active; opening any of the above
 
 ### Current Recommendation
 
-The Product Owner has decided to accelerate toward automation and, eventually, productizing this framework for other projects. This replaces the prior blanket "no automation" stance — but the gating logic stays: automate only what has been demonstrated through repeated manual use, starting with the narrowest, most mechanical step first. The gate now also runs forward: shipped automation must demonstrate value in real use before the next layer (triggering, productization) is opened.
-
-Milestones 6 through 10 are complete and Milestone 8's owed live-run validation is discharged. The bounded gate-override worked as intended end to end: the narrowest-slice trigger shipped, reviewing its PR with `review-context.sh` produced Milestone 7's validation, that review found the hardcoded-list defect (fixed in Milestone 9), and the Milestone 9 implementation was itself driven by the first live `trigger-agent.sh` run — discharging Milestone 8's validation as a byproduct. Each step continued to surface its own next increment from real use.
+The Product Owner has decided to accelerate toward automation and, eventually, productization. This replaces the prior blanket "no automation" stance, but the gate stays and now runs forward: automate only what repeated manual use has demonstrated, narrowest mechanical step first, and each shipped layer must prove value in real use before the next (triggering, productization) opens.
 
 Recommended next step:
 
-1. **Hold at the rest state; take up no new build by default.** Milestones 1–12 are complete and validated, and Increment 1 has been dropped (its premise failed empirically — see Acceleration Roadmap). With the active slot deliberately empty, the disciplined default is to stop and let the next build be a fresh Product Owner decision rather than auto-promoting Increment 2. Increments 2 and 3 remain gated acceleration overrides; do not build them absent a Product Owner decision to take them up.
+1. **Hold at the rest state; take up no new build by default.** Milestones 1–12 are complete and validated, and Increment 1 has been dropped (premise failed empirically — see Acceleration Roadmap). With the active slot deliberately empty, the disciplined default is to let the next build be a fresh Product Owner decision rather than auto-promoting Increment 2. Increments 2 and 3 remain gated acceleration overrides; do not build them absent a Product Owner decision.
 
-The friction gate still governs everything outside any named Acceleration Roadmap. Dropping Increment 1 does not loosen the gate; productization remains gated until separately justified.
+The friction gate governs everything outside a named Acceleration Roadmap; dropping Increment 1 does not loosen it, and productization stays gated until separately justified.
 
-The prior dirty-tree friction in the handoff flow has been resolved: `.claude/settings.local.json` is now untracked and gitignored (Issue #31, PR #32), so routine permission grants no longer dirty the tree or block `new-handoff.sh`.
-
-Do not build, until each is separately justified by its own repeated manual pattern:
-
-- Agent orchestration
-- Multi-agent communication infrastructure
-- Automatic triggering of the external agent
-- Skills or GitHub integrations beyond the Milestone 3 target
+Do not build, until each is separately justified by its own repeated manual pattern: agent orchestration; multi-agent communication infrastructure; automatic triggering of the external agent; skills or GitHub integrations beyond the Milestone 3 target.
 
 ### Reasoning
 
-The operating model should emerge from experience rather than speculation, even on an accelerated timeline. Compressing the validation phase is acceptable; skipping it is not — automation targets must still be chosen from patterns that have actually repeated, not from what seems generically useful.
-
-Premature infrastructure increases maintenance burden without validating that it solves a real problem.
+The operating model should emerge from experience rather than speculation, even on an accelerated timeline. Compressing the validation phase is acceptable; skipping it is not — automation targets must be chosen from patterns that have actually repeated, not from what seems generically useful. Premature infrastructure increases maintenance burden without validating that it solves a real problem.
 
 ---
 
@@ -190,22 +146,4 @@ Describe responsibilities in terms of roles (e.g., Staff Engineer, Software Engi
 
 ## Planning Rules
 
-This document should remain concise and actionable.
-
-It should capture:
-
-- Strategic direction
-- Current priorities
-- Engineering recommendations
-- Active risks
-- Major open questions
-
-It should not duplicate:
-
-- GitHub Issues
-- Pull Request descriptions
-- Implementation details
-- Change logs
-- Long task lists
-
-When priorities change, update this document rather than creating a new planning artifact.
+This document captures strategic direction, current priorities, engineering recommendations, active risks, and major open questions. It is not a changelog, task list, or duplicate of Issues, PR descriptions, or implementation detail. The maintenance and compaction contract lives in CLAUDE.md's `## PLAN.md` section. When priorities change, update this document rather than creating a new planning artifact.
