@@ -64,7 +64,7 @@ Exit condition: continue operating, return to Investigate for new uncertainty, o
 These are ANALYSIS LENSES the Staff Engineer may adopt while analyzing the work. They are not delegated agents and not a code-producing channel. Any work that produces code crosses the single blessed handoff to the external Software Engineer.
 
 - Research — prior art, uncertainty reduction, external retrieval, benchmark awareness.
-- Applied ML — data splits, labels, feature/model fit, baselines, error analysis.
+- Applied ML — data splits, labels, feature/model fit, baselines, error analysis, or pretrained model selection, contract/version pinning, and failure modes.
 - LLM Systems — prompting, retrieval, context construction, evaluation correlation, hallucination risk.
 - Computer Vision — data capture, annotation quality, augmentation, model failure modes, visual inspection.
 - Data Engineering — ingestion, schemas, lineage, reproducibility, data contracts.
@@ -76,7 +76,7 @@ Research is the least-correlated lens because it can bring in external retrieval
 
 First classify online-vs-offline:
 
-- Offline — batch analysis, notebook-backed exploration, training, evaluation, or post-processing. Do not assume real-time inference.
+- Offline — batch analysis, deterministic CLI/tool runs over static inputs, notebook-backed exploration, training, evaluation, or post-processing. Do not assume real-time inference.
 - Online — request-time inference, interactive user flows, or production serving with latency and availability constraints.
 - Hybrid — offline preparation plus online serving. Name which parts are offline and which are online.
 
@@ -101,7 +101,7 @@ DS-specific evaluation should name:
 
 - Leakage and holdout discipline — what data is excluded from tuning, prompt iteration, retrieval construction, and manual exploration.
 - Evaluator correlation — whether the same model, prompt family, author, dataset source, or labeling process appears on both sides of the evaluation.
-- Non-determinism handling — seeds, repeated runs, confidence intervals, thresholds, or qualitative review rules where exact repeatability is not realistic.
+- Non-determinism handling — require exact repeatability when the project can provide it; where exact repeatability is not realistic, use seeds, repeated runs, confidence intervals, thresholds, or qualitative review rules.
 - Evaluation artifacts as review inputs — metrics when they are true eval metrics, property checks, deterministic thresholds, confusion/error slices, sample outputs, labeled examples, notebooks, logs, or reports needed to review the claim.
 
 ## Notebook Strategy
