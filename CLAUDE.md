@@ -220,6 +220,8 @@ Prefer pointers to authoritative files over duplicating information.
 
 A project may adopt a project-type profile — project-independent guidance for a class of work — that supplements but never replaces this operating model. A profile composes with and points at the base concerns rather than duplicating or overriding them.
 
+When authoring a profile, make its structure explicit rather than leaving it to be inferred: required project declarations are named slots, and each section either applies universally or declares the condition that includes it. Named slots keep a required declaration from being silently skipped; per-section applicability lets profile-vs-project validation separate universal content from conditional content.
+
 ---
 
 ## Documentation Philosophy
