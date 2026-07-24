@@ -122,6 +122,27 @@ Do not implement the feature, spawn a sub-agent, or use Claude Code's Agent tool
 
 When a triggered agent implements and pushes its branch but cannot open its own pull request (e.g. the sandbox cannot reach api.github.com), the Product Owner files the PR from the agent's pushed branch using the agent's provided PR body. The Staff Engineer then reviews the diff on its merits. The filer is the Product Owner, not the Staff Engineer; this preserves the author/reviewer separation.
 
+### Batching a Large or Risky Issue
+
+Most issues are delivered and reviewed in a single end-of-work pass; batching those is pure overhead. For an issue large or risky enough that a single review could not be done well, the Staff Engineer may instead scope the implementation into **batches**. Whether to batch is a per-issue judgment call the Staff Engineer makes when scoping the handoff — not a blanket rule.
+
+When batching:
+
+- A batch is the smallest set of the issue's acceptance-criteria items that leaves the tree green (lint and tests pass). Never split an interface from its wiring. Target a reviewable diff.
+- Size by risk: novel or architecturally significant work takes smaller batches, down to a single item; mechanical or repetitive work takes larger ones.
+- Batching is adaptive: a clean batch grows the next; a batch that needed heavy correction shrinks the next, and the correction pattern is stated explicitly in the next handoff.
+- Each reviewed batch is a commit on the feature branch; review the delta against the last reviewed commit, applying the Review Gate Briefing at each gate. The pull request remains the final gate; squash-merge and linear history are unchanged.
+
+The real cost of batching is that it multiplies handoff round-trips: the Staff Engineer does not implement, so every batch and every correction round-trips through the handoff to the external Software Engineer. Accept that cost deliberately, or do not batch.
+
+Three mechanisms from the prior art this convention adapts are deliberately **not** adopted:
+
+1. **Index-as-checkpoint** (`git add -A` staging, delta review via worktree-vs-index, no commits until release). It stores review state in the working tree's single index, so it is single-threaded by construction and does not compose with parallel decomposition; it would also compound the known worktree-incompatibility of the repo's scripts. We use commits on the branch instead.
+2. **Staff Engineer fixes problems directly.** This violates the handoff boundary; corrections round-trip to the Software Engineer instead.
+3. **Agent-reviews-agent as the formal gate.** The review gate stays Staff-Engineer-then-human; the same model does not both implement and formally approve.
+
+This convention is adopted prospectively — from expected future work larger than this repo has yet produced, not from demonstrated local friction — and does nothing when not invoked.
+
 ---
 
 ## Review
@@ -131,6 +152,23 @@ Review every pull request against its issue, not from memory.
 Begin each review by running `scripts/review-context.sh <pr-number>` from the repository root. In one read-only pass it gathers the PR metadata, the linked issue and its acceptance criteria, the changed files, the diff (or a stat summary for large diffs), and the repository's lint and test results. It gathers context only — it makes no review decision.
 
 Then apply engineering judgment the helper cannot: confirm scope was respected, evaluate each acceptance criterion individually, and decide to approve or request changes. The helper informs the review; it does not replace it.
+
+### Review Gate Briefing
+
+At each review gate, present a standard briefing before reading the diff. Its governing principle: the briefing **points at** the artifact, it does not replace it. It routes attention — here is what changed, here is what is anomalous, now read the diff. If the briefing is ever sufficient on its own to approve, the gate has stopped being a gate.
+
+Present:
+
+- **Issue and approach** — issue number and a one-line description of how it was implemented.
+- **Files affected** — count and names. For parallel work this doubles as the file-footprint disjointness check the Parallel Decomposition section requires.
+- **Acceptance criteria** — N of M met, and which specific criteria are unmet.
+- **Verification** — whether lint and tests *actually ran against the changed files*, not merely that they reported green. Filesystem discovery already closed the "test silently skipped" defect; this field guards the residual "test ran without asserting anything about the change" form that no script checks.
+- **Scope** — whether the implementer stayed inside the issue, and what it flagged as out of scope.
+- **Deviations / pushback** — anything the implementer disagreed with, assumed, or resolved silently.
+- **Review status** — approved / open findings / capped without convergence / skipped. The negative states are the reason the field exists; a status that can only read "approved" is decoration.
+- **Eval status** (only for data-science work under a project-type profile that defines an evaluation) — the eval metric before and after, and the data version it ran against.
+
+Only the verification field is earned from a demonstrated local failure (a review once reported tests green while the change's own test was never exercised); the rest is standardization adopted from prior art. The briefing never substitutes for the read-through.
 
 ---
 
