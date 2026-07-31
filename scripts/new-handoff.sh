@@ -158,7 +158,7 @@ fi
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
 CURRENT_DIR=$(pwd -P)
-if [[ "$REPO_ROOT" != "$CURRENT_DIR" ]]; then
+if [[ ! "$REPO_ROOT" -ef "$CURRENT_DIR" ]]; then
   echo "Error: run this script from the repository root." >&2
   exit 1
 fi
