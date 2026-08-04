@@ -25,3 +25,13 @@ shell_files=(scripts/*.sh tests/test-*.sh)
 if [[ ${#shell_files[@]} -gt 0 ]]; then
   shellcheck "${shell_files[@]}"
 fi
+
+echo "Lint scope: shell files only (scripts/*.sh and tests/test-*.sh)."
+echo "Checked files:"
+if [[ ${#shell_files[@]} -gt 0 ]]; then
+  for shell_file in "${shell_files[@]}"; do
+    echo "- $shell_file"
+  done
+else
+  echo "(none)"
+fi
