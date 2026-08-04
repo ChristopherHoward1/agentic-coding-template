@@ -149,4 +149,4 @@ Describe responsibilities in terms of roles (e.g., Staff Engineer, Software Engi
 
 ## Planning Rules
 
-This document captures strategic direction, current priorities, engineering recommendations, active risks, and major open questions. It is not a changelog, task list, or duplicate of Issues, PR descriptions, or implementation detail. The maintenance and compaction contract lives in conventions/plan-compaction.md. When priorities change, update this document rather than creating a new planning artifact.
+This document captures strategic direction, current priorities, engineering recommendations, active risks, and major open questions. It is not a changelog, task list, or duplicate of Issues, PR descriptions, or implementation detail. The maintenance contract lives in CLAUDE.md's `## PLAN.md` section; the compaction contract lives in `conventions/plan-compaction.md`. When priorities change, update this document rather than creating a new planning artifact.
