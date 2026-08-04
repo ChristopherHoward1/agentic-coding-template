@@ -124,26 +124,7 @@ Do not implement the feature, spawn a sub-agent, or use Claude Code's Agent tool
 
 When a triggered agent implements and pushes its branch but cannot open its own pull request (e.g. the sandbox cannot reach api.github.com), the Product Owner files the PR from the agent's pushed branch using the agent's provided PR body. The Staff Engineer then reviews the diff on its merits. The filer is the Product Owner, not the Staff Engineer; this preserves the author/reviewer separation.
 
-### Batching a Large or Risky Issue
-
-Most issues are delivered and reviewed in a single end-of-work pass; batching those is pure overhead. For an issue large or risky enough that a single review could not be done well, the Staff Engineer may instead scope the implementation into **batches**. Whether to batch is a per-issue judgment call the Staff Engineer makes when scoping the handoff — not a blanket rule.
-
-When batching:
-
-- A batch is the smallest set of the issue's acceptance-criteria items that leaves the tree green (lint and tests pass). Never split an interface from its wiring. Target a reviewable diff.
-- Size by risk: novel or architecturally significant work takes smaller batches, down to a single item; mechanical or repetitive work takes larger ones.
-- Batching is adaptive: a clean batch grows the next; a batch that needed heavy correction shrinks the next, and the correction pattern is stated explicitly in the next handoff.
-- Each reviewed batch is a commit on the feature branch; review the delta against the last reviewed commit, applying the Review Gate Briefing at each gate. The pull request remains the final gate; squash-merge and linear history are unchanged.
-
-The real cost of batching is that it multiplies handoff round-trips: the Staff Engineer does not implement, so every batch and every correction round-trips through the handoff to the external Software Engineer. Accept that cost deliberately, or do not batch.
-
-Three mechanisms from the prior art this convention adapts are deliberately **not** adopted:
-
-1. **Index-as-checkpoint** (`git add -A` staging, delta review via worktree-vs-index, no commits until release). It stores review state in the working tree's single index, so it is single-threaded by construction and does not compose with parallel decomposition; it would also compound the known worktree-incompatibility of the repo's scripts. We use commits on the branch instead.
-2. **Staff Engineer fixes problems directly.** This violates the handoff boundary; corrections round-trip to the Software Engineer instead.
-3. **Agent-reviews-agent as the formal gate.** The review gate stays Staff-Engineer-then-human; the same model does not both implement and formally approve.
-
-This convention is adopted prospectively — from expected future work larger than this repo has yet produced, not from demonstrated local friction — and does nothing when not invoked.
+For an issue large or risky enough that a single review could not be done well, load conventions/batching.md before scoping the handoff.
 
 ---
 
@@ -227,19 +208,7 @@ Update PLAN.md only when there is a material change to project objectives, miles
 
 Routine execution details belong in GitHub Issues, Pull Requests, commit history, or other implementation artifacts.
 
-### Compaction
-
-PLAN.md grows monotonically as milestones complete. Without discipline the completed-milestone prose drifts from orientation into a changelog — which this section already forbids — so compaction is enforcement of that rule, not new policy.
-
-Preserve verbatim: the Active Milestone, every Open Decision, all live reasoning chains (why a decision went the way it did, why an item is gated, what a label fences off), and current state. Reasoning that survives only as a restated fact has been lost even when the fact remains — the cold-read test below is the guard against exactly that.
-
-Compact: completed-milestone execution narrative (issue/PR numbers, what a review found, how a bug was fixed), restated acceptance criteria, and any reasoning stated in more than one place. The How is preserved by git history and the linked PR/issue; the working artifact need not carry it.
-
-Trigger: at each milestone retrospective, write the new Completed entry at orientation density and check whether earlier entries have drifted back into narrative. Separately, when a reasoning fact appears in a second location, reduce the second to a pointer (single-source rule). Do not build a size checker or token budget; if measurement proves necessary through use, that is a later increment.
-
-Strategies: keep What/Why, cut How; convert parallel prose to a table; collapse enumerations into summaries; give each reasoning chain one canonical home and point at it elsewhere. The density target is qualitative — a completed entry should read as orientation, not a changelog.
-
-A compaction pass is accepted only against the cold-read test: a fresh reader given only the compacted PLAN.md must be able to reconstruct each preserved reasoning chain's Why, not merely its What. Size reduction is necessary but never sufficient, and the author of a compaction cannot be its verifier.
+At each milestone retrospective or when PLAN.md reasoning duplicates another location, load conventions/plan-compaction.md before editing PLAN.md.
 
 ---
 
