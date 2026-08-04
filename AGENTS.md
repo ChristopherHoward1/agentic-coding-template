@@ -43,6 +43,7 @@ Before opening a pull request:
 
 - Confirm every acceptance criterion in the issue is satisfied.
 - Run any checks the repository defines (tests, lint, typecheck, build). If none exist, note that in the PR.
+- Confirm generated code satisfies the project's declared target platform rather than merely running on the implementing agent's host; if code touches filesystem paths, shells, or OS services and no target platform is declared, stop and surface the missing declaration.
 - Do not open a PR that you know fails an acceptance criterion. If you cannot satisfy one, explain why in the PR description.
 
 ---
