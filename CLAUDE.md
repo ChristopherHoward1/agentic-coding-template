@@ -45,6 +45,8 @@ Do not introduce automation, reusable skills, orchestration, or extra documentat
 
 The operating system encodes no domain's evaluation, data, or regulatory standards as universal; the project declares the regime that applies to it.
 
+The operating system encodes no execution environment as universal. A project that produces code touching filesystem paths, shells, or operating-system services declares its target platform; a project producing no such code declares nothing.
+
 ---
 
 ## Session Startup
