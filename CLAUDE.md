@@ -53,7 +53,7 @@ The operating system encodes no execution environment as universal. A project th
 
 At the beginning of planning-oriented work:
 
-1. Read PLAN.md.
+1. Read PLAN.md from an up-to-date `main`, not from the current working branch. Every change lands on `main` by squash-merge, so a feature branch's PLAN.md is stale by construction and a stale read fails silently.
 2. Check whether the current request changes project priorities, risks, recommendations, or open decisions.
 3. If it does, propose an update to PLAN.md before implementation discussion continues.
 
