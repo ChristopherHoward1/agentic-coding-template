@@ -44,6 +44,7 @@ if [[ ! "$REPO_ROOT" -ef "$CURRENT_DIR" ]]; then
   echo "Error: run this script from the repository root." >&2
   exit 1
 fi
+GIT_DIR=$(git rev-parse --absolute-git-dir)
 
 [[ -s "$HANDOFF" ]] || usage_error "handoff file does not exist or is empty: $HANDOFF"
 
@@ -58,8 +59,8 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 
 if [[ "$DRY_RUN" == true ]]; then
-  echo "codex exec --sandbox workspace-write - < \"$HANDOFF\""
+  echo "codex exec --sandbox workspace-write --add-dir \"$GIT_DIR\" - < \"$HANDOFF\""
   exit 0
 fi
 
-codex exec --sandbox workspace-write - < "$HANDOFF"
+codex exec --sandbox workspace-write --add-dir "$GIT_DIR" - < "$HANDOFF"

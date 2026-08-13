@@ -4,6 +4,7 @@ set -uo pipefail
 FAILURES=0
 LAST_OUTPUT=""
 LAST_STATUS=0
+LAST_GIT_DIR=""
 BASH_BIN=${BASH:-/bin/bash}
 SCRIPT_PATH="$(pwd -P)/scripts/trigger-agent.sh"
 
@@ -68,6 +69,7 @@ run_in_clean_repo() {
   make_clean_repo "$temp_repo"
   make_codex_stub "$stub_dir/bin" "$log_file" "$stdin_file" "$codex_status"
   write_committed_handoff "$temp_repo" "handoff.md"
+  LAST_GIT_DIR=$(cd "$temp_repo" || exit 1; git rev-parse --absolute-git-dir)
   (
     cd "$temp_repo" || exit 1
     CODEX_STUB_LOG="$log_file" \
@@ -158,7 +160,7 @@ test_invokes_codex_once_with_handoff_on_stdin() {
   run_in_clean_repo 0 handoff.md
 
   assert_status "$name" 0 || return
-  assert_equals "$name" "$LAST_CODEX_LOG" "exec --sandbox workspace-write -" || return
+  assert_equals "$name" "$LAST_CODEX_LOG" "exec --sandbox workspace-write --add-dir $LAST_GIT_DIR -" || return
   assert_equals "$name" "$LAST_CODEX_STDIN" "Implementation handoff
 Line two" || return
 
@@ -171,7 +173,7 @@ test_exits_with_codex_status() {
   run_in_clean_repo 17 handoff.md
 
   assert_status "$name" 17 || return
-  assert_equals "$name" "$LAST_CODEX_LOG" "exec --sandbox workspace-write -" || return
+  assert_equals "$name" "$LAST_CODEX_LOG" "exec --sandbox workspace-write --add-dir $LAST_GIT_DIR -" || return
 
   pass "$name"
 }
@@ -182,7 +184,7 @@ test_dry_run_prints_command_and_invokes_nothing() {
   run_in_clean_repo 0 --dry-run handoff.md
 
   assert_status "$name" 0 || return
-  assert_equals "$name" "$LAST_OUTPUT" "codex exec --sandbox workspace-write - < \"handoff.md\"" || return
+  assert_equals "$name" "$LAST_OUTPUT" "codex exec --sandbox workspace-write --add-dir \"$LAST_GIT_DIR\" - < \"handoff.md\"" || return
   assert_equals "$name" "$LAST_CODEX_LOG" "" || return
 
   pass "$name"
