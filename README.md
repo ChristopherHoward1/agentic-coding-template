@@ -1,68 +1,138 @@
-# AI Engineering Operating System
+# agentic-coding
 
-A framework for solo builders who work with AI agents using the discipline of a small, high-performing engineering team.
+A small, opinionated framework for building software with AI agents — where **no agent is ever trusted to check its own work.**
 
-## Overview
+One Claude Code session acts as the **Orchestrator**: it plans, dispatches, and drives the loop. Every stage that could go wrong is checked by a *different* agent — a fresh thread, cold context, often a different model — and by a deterministic shell gate that no agent can talk its way past. The human is the **Owner**: they set direction and merge.
 
-This repository defines a collaboration model where one human and AI agents follow structured software engineering practices — planning, branching, code review, and retrospectives. The goal is process quality, maintainability, and learning, not maximum automation.
+No custom runtime. No ceremony that doesn't catch a defect.
 
-## How It Works
+---
 
-The system defines three roles:
+## The loop
 
-- **Product Owner** (human) — sets priorities, makes product decisions, and owns the roadmap.
-- **Staff Engineer** (AI agent) — provides technical leadership, plans work, reviews pull requests, and protects long-term maintainability.
-- **Software Engineer** (AI coding agent) — implements issues, writes code, and submits pull requests for review. This role is agent-agnostic; use whichever AI coding tool fits your workflow.
-
-Work follows a deliberate lifecycle: goal → planning → issue → feature branch → implementation → pull request → review → merge → retrospective. The workflow is intentionally designed to make engineering judgment explicit, reviewable, and repeatable.
-
-Not every item ends in merged code. Uncertainty-reducing work — a benchmark, a recommendation, a validated or rejected hypothesis — moves through the same issue → branch → PR → review path, but records its outcome as a decision in PLAN.md or an issue comment rather than a new artifact.
-
-Milestones can be decomposed into a dependency graph of issues. Independent issues — those with disjoint file footprints and no interface dependency — can run in parallel, while dependent work is serialized with explicit issue references. The implementation issue template includes an optional `## Dependencies` section for recording those edges.
-
-## Project-Type Profiles
-
-The base operating model in `CLAUDE.md` is domain-agnostic. A **project-type profile** supplements it with guidance for a class of work without overriding it — profiles compose with the base concerns and point back at the universal workflow rather than duplicating it. This keeps the core model general while letting a specific kind of project adopt conventions that only make sense for it.
-
-The first profile, `profiles/applied-ai-data-science.md`, is in progress (`STATUS: PROVISIONAL`). It adds a Frame → Investigate → Implement → Operate lifecycle lens and evaluation conventions for applied AI and data-science work, and is being validated against real projects before it is considered stable.
-
-## Getting Started
-
-1. Clone this repository.
-2. Open it in [Claude Code](https://claude.ai/claude-code).
-3. Start a conversation — Claude reads `CLAUDE.md` on startup and operates as the Staff Engineer.
-4. To assign implementation work, use your preferred AI coding agent scoped to a specific issue.
-
-## Tests
-
-Run the linter and bash test scripts from the repository root:
-
-```bash
-bash scripts/lint.sh
-for t in tests/test-*.sh; do bash "$t"; done
+```
+/1-plan  →  /2-implement  →  /3-review  →  /4-release  →  /5-retro
 ```
 
-The linter and this loop discover their targets from the filesystem, so they cover every script and test in the repo without a hardcoded list.
+Each stage produces an **artifact** (a plan, a diff, a release commit), and each artifact is handed to an independent checker before it advances. Feedback flows *backward* until the checker is satisfied; work only moves *forward* on an explicit verdict.
 
-## Repository Structure
+```mermaid
+flowchart TD
+    Owner([Owner: what to build]):::human --> Draft
 
-| File | Purpose |
-|------|---------|
-| `CLAUDE.md` | Operating instructions for the Staff Engineer agent — role definition, workflow, principles, and standards. |
-| `AGENTS.md` | Operating instructions for the Software Engineer agent — scope discipline, verification, and handoff format. |
-| `PLAN.md` | Shared planning artifact — current objectives, risks, recommendations, and open decisions. |
-| `profiles/applied-ai-data-science.md` | Project-type profile (provisional) supplementing the base model with conventions for applied AI and data-science work. |
-| `scripts/new-issue.sh` | Interactive CLI to scaffold a new implementation issue from the standard template. |
-| `scripts/new-handoff.sh` | Interactive CLI to create a feature branch and generate the standard implementation handoff. |
-| `scripts/review-context.sh` | Read-only helper that assembles PR review context — metadata, linked issue and acceptance criteria, changed files, diff, and lint/test results — without making a review decision. |
-| `scripts/trigger-agent.sh` | Hands a completed implementation handoff to the external coding agent (one-shot `codex exec` invocation). |
-| `.github/ISSUE_TEMPLATE/implementation.md` | Issue template defining the standard structure for scoped implementation work. |
-| `.github/PULL_REQUEST_TEMPLATE.md` | Pull request template prompting for the linked issue, a summary, partially-satisfied criteria, and risks or follow-ups. |
+    Draft["<b>/1-plan</b><br/>Orchestrator drafts work/slug/plan.md"] --> PRev{{"plan-reviewer<br/>fresh · cold · read-only"}}:::grill
+    PRev -- "REVISE" --> Draft
+    PRev -- "Plan verdict: APPROVE" --> Impl
 
-## Philosophy
+    Impl["<b>/2-implement</b><br/>implementer writes code in isolated worktree wt/slug<br/>configurable · default Codex"] --> Gate{"scripts/gate.sh<br/>exit 0 or not"}
+    Gate -- "fail — output IS the retry prompt" --> Impl
+    Gate -- "pass" --> CRev
 
-Favor simple, reversible solutions. Prefer proven need over speculative infrastructure. Build process from experience, not speculation. See [CLAUDE.md](CLAUDE.md) for the full operating principles.
+    CRev{{"<b>/3-review</b><br/>code-reviewer · NEW fresh thread · different model<br/>sees diff + plan only"}}:::grill
+    CRev -- "REVISE — back to the implementer" --> Impl
+    CRev -- "Code-review verdict: APPROVE<br/>Codex-review verdict: APPROVE" --> Rel
 
-## License
+    Rel["<b>/4-release</b><br/>release.sh re-runs gate + preconditions<br/>bumps version on branch"] --> Merge["Owner merges PR<br/>rebase / fast-forward"]:::human
+    Merge --> Tag["tag-after-merge<br/>verify origin/main, then tag"]
+    Tag --> Retro["<b>/5-retro</b><br/>lessons routed: knowledge / PLAN.md / new unit<br/>next release blocked until retro exists"] --> Done([tagged release]):::human
 
-TBD
+    classDef grill fill:#f9e6f2,stroke:#b34a8c,stroke-width:2px,color:#000;
+    classDef human fill:#e8f0ff,stroke:#3a6ea5,stroke-width:2px,color:#000;
+```
+
+The five **`/slash`-command stages** are the loop. `{{Hexagons}}` are the **adversarial checkpoints** — an agent whose only job is to try to break the previous agent's work. Blue nodes are the **Owner**. Everything else is the Orchestrator driving deterministic machinery.
+
+Trivial fixes (typos, one-liners, config tweaks) skip the loop — you just do them on a branch. The loop is for work with enough surface area to get wrong.
+
+---
+
+## Why the agents grill each other
+
+The core bet of this framework: **a single agent grading its own output is the weakest link in the pipeline.** It has already committed to an approach, it has the same blind spots on review as it had on write, and it is motivated to declare victory. So the framework never lets that happen. Three independent forces have to agree before anything ships:
+
+**1. Writer ≠ reviewer, mechanically.** Reviews come only from subagents defined in `.claude/agents/` — with **read-only tools**, so a reviewer *cannot* quietly fix what it finds; it can only report. The Orchestrator that dispatched the work never reviews that work. This isn't a guideline in a prompt; it's enforced by which tools each agent is handed.
+
+**2. Fresh, cold context defeats anchoring.** Every review runs in a brand-new thread that has never seen the implementation conversation — it gets *only* the diff and the plan. A reviewer that watched the code being written is already anchored to its reasoning; one that sees just the result asks "does this actually match the plan?" from scratch. Re-reviews after a fix get *another* new thread, because a reviewer that already approved a direction is compromised on the next pass.
+
+**3. A different model breaks correlated blind spots.** The implementer, the reviewers, and the selector can each run a different model (set per role in `config.yaml`). A bug the writer's model can't see is often obvious to a different one. Same-vendor agreement is corroboration, not proof — so the deterministic gate carries the real weight, and agent agreement backs it up.
+
+**And above all of them sits a script.** `scripts/gate.sh` exits `0` or it doesn't. No agent — Orchestrator or reviewer — can overrule it, reinterpret it, or call work "done" while it's red. When it fails, its output *is* the prompt fed back to the implementer. Judgment lives in the agents; the pass/fail decision lives in code.
+
+> **Why this pays off:** the gate and the reviewers catch *different classes* of defect. The gate catches what's mechanically checkable — a lint error, a broken test, a shellcheck warning. The adversarial reviewer catches what a passing gate can hide: an edge case with no test, a plan requirement quietly unmet, a shell idiom that works on the author's machine and breaks on bash 3.2. Neither alone is enough. Rounds of an independent agent *trying to break* green code routinely surface real bugs the gate signed off on — which is exactly the point of making them argue.
+
+---
+
+## Best-of-N implement (opt-in)
+
+For high-value work units, `/2-implement` can run **N implementer samples, each in its own isolated worktree**, drop the ones that fail the gate, and have a fresh `fan-selector` agent pick the winner by plan-fit — another instance of the same principle: generate diversity, then filter it through an independent judge. (Dispatch is sequential, so N > 1 costs N× wall-clock, not just N× tokens.)
+
+```mermaid
+flowchart LR
+    H[handoff] --> A1[sample 1] & A2[sample 2] & A3[sample N]
+    A1 & A2 & A3 --> G{gate each}
+    G -- "gate-passers only" --> Sel{{fan-selector<br/>ranks vs plan}}:::grill
+    Sel --> W["adopt winner<br/>as wt/slug"] --> R["/3-review"]
+    classDef grill fill:#f9e6f2,stroke:#b34a8c,stroke-width:2px,color:#000;
+```
+
+It's off by default (`implementer.fan: 1` — byte-for-byte the single-agent path). Set N > 1 only when the extra implementer tokens are worth it. It reduces per-run *variance*; it does **not** replace cross-model review.
+
+---
+
+## Design rules
+
+1. **Writer never reviews** — enforced by fresh subagent threads with read-only tools, not by prose.
+2. **The gate is deterministic** — agents don't argue with exit codes; failure output *is* the retry prompt.
+3. **Implementation happens in worktrees** — never in the main checkout; `scripts/worktree.sh` manages them.
+4. **Artifacts flow, not transcripts** — reviewers see the diff and plan, never the implementation conversation.
+5. **Release is a script** — `scripts/release.sh` owns every precondition as an exit code; it never pushes and never touches `main`. Tagging happens only after the PR merges, and only if the merged commit *is* the release commit.
+6. **Context is tiered** — hot (`CLAUDE.md` + `ARCHI.md` + `PLAN.md`, ~300 lines total), warm (active skill + profile), cold (`knowledge/`, loaded on citation, starts empty).
+7. **Vendor names live in `config.yaml` only** — swap the implementer or any reviewer model by editing one line.
+
+---
+
+## Layout
+
+```
+CLAUDE.md            orchestrator constitution — the rules above, authoritative (hot)
+ARCHI.md             architecture snapshot, regenerated by /compact, never groomed (hot)
+PLAN.md              one screen: objective, now, decisions, risks (hot)
+AGENTS.md            the implementer's contract
+
+config.yaml          the one knob: profile, model per role, implementer command, gate + worktree settings
+
+skills/              the loop as skills:
+                       1-plan · 2-implement · 3-review · 4-release · 5-retro · init · compact · docs
+                       (1-plan, 2-implement & docs carry prompts/*.tpl)
+.claude/agents/      the checkers (read-only, own models, cold context):
+                       plan-reviewer · code-reviewer · fan-selector
+scripts/             the deterministic layer:
+                       gate.sh        stack-detecting pass/fail
+                       worktree.sh    isolated-checkout lifecycle
+                       agent-exec.sh  dispatch the implementer into a worktree
+                       fan-exec.sh    best-of-N dispatch + winner adoption
+                       codex-review.sh second-vendor (codex) code reviewer
+                       demo.sh        run a plan's ## Demonstration block
+                       archi-fresh.sh ARCHI.md freshness check
+                       state.sh       derive a work unit's stage and next action
+                       release.sh     preconditions, version/changelog, tag-after-merge
+                       gate.d/*.sh    project-specific gate extensions
+profiles/            software · machine-learning · database · work — add slots, never override
+work/<slug>/         one directory per work unit: plan.md, handoff.md, notes.md
+VERSION / CHANGELOG  CalVer + Keep-a-Changelog, written only by release.sh
+knowledge/           cold-tier reference docs — earned, not designed (starts empty)
+```
+
+---
+
+## Getting started
+
+1. Use this repo as a template, or copy it into an existing project.
+2. Open it in Claude Code and run `/init` — it scans the codebase, generates `ARCHI.md`, sets the profile, and verifies the gate runs.
+3. Start work: `/1-plan <what you want>`, then follow the loop.
+
+## Requirements
+
+- **Claude Code** — the Orchestrator and the reviewer subagents.
+- **An implementer CLI** — default `codex`; set `implementer.command` in `config.yaml` to use anything else (including Claude Code itself).
+- **`git`, `bash`**, and whatever your project's gate needs (`shellcheck`, `ruff`, `pytest`, `cargo`, `go`, …); declare hard prerequisites with `gate.required_tools`. The gate auto-detects the stacks present.
