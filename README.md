@@ -109,6 +109,9 @@ harness/agents/      the checkers (installed into ~/.claude/agents/) (read-only,
 harness/bin/harness  location-independent command dispatcher
 harness/scripts/     the deterministic layer:
                        install.sh     link dispatcher, skills and agents into the home directory
+                       register.sh    register a work repo: home-directory state, nothing committed
+                       project.sh     print the project's state dir, mode or project root
+                       lib/project.sh shared registry/repo-mode resolution (sourced, not a command)
                        gate.sh        stack-detecting pass/fail
                        worktree.sh    isolated-checkout lifecycle
                        agent-exec.sh  dispatch the implementer into a worktree
@@ -129,6 +132,8 @@ knowledge/           cold-tier reference docs — earned, not designed (starts e
 ---
 
 ## Getting started
+
+For a work repo, run `harness register [--subdir <path>]` before `/init`; harness state lives under `$(harness project)` with no committed harness files.
 
 1. Use this repo as a template, or copy it into an existing project.
 2. Install the harness: `./harness/bin/harness install` (keep `~/.local/bin` on PATH).
