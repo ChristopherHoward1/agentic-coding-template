@@ -21,8 +21,8 @@ reviewer:
 
 gate:
   command: harness gate
-  required_tools: shellcheck
+  required_tools:
   max_retries: 2             # failed-gate feedback loops before escalating to the Owner
 
 archi:
-  sources: harness/:scripts/:config.yaml:CLAUDE.md
+  # sources: src/:config.yaml:CLAUDE.md
