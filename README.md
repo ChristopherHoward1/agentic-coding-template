@@ -108,6 +108,7 @@ harness/scripts/     the deterministic layer:
                        install.sh     link dispatcher, skills and agents into the home directory
                        register.sh    register a work repo: home-directory state, nothing committed
                        project.sh     print the project's state dir, mode or project root
+                       lib/stack.sh   shared stack parent, fork point and review base (sourced)
                        lib/project.sh shared registry/repo-mode resolution (sourced, not a command)
                        gate.sh        stack-detecting pass/fail
                        worktree.sh    isolated-checkout lifecycle
@@ -119,7 +120,7 @@ harness/scripts/     the deterministic layer:
                        state.sh       derive a work unit's stage and next action
                        release.sh     preconditions, version/changelog, tag-after-merge
 harness/examples/    opt-in gate hooks
-harness/profiles/    software · machine-learning · database · work — add slots, never override
+harness/profiles/    software · machine-learning · database · work · work-slim — add slots, never override
 harness/skeleton/    starting config.yaml, ARCHI.md, PLAN.md, VERSION and CHANGELOG.md
 harness/tests/       smoke suite for the shell layer
 ```
